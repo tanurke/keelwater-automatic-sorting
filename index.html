@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Starting Point | Keelwater automatic sorting</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="site-title">Keelwater: automatic sorting</p>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html" aria-current="page">Starting Point</a></li>
+          <li><a href="ai-brainstorming.html">AI Brainstorming</a></li>
+          <li><a href="ai-challenged.html">Where I Challenged AI</a></li>
+          <li><a href="solution.html">Slides preparation using AI</a></li>
+          <li><a href="prototype.html">Prototype</a></li>
+          <li><a href="slides.html">Final submission</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Starting Point</h1>
+
+    <section class="step" aria-labelledby="step-1-title">
+      <span class="step-label">Step 1</span>
+      <h2 id="step-1-title">Read the problem</h2>
+      <p class="step-summary">My first pass.</p>
+      <figure class="notes-figure">
+        <img src="images/handwritten-notes.png" alt="Handwritten notes from first reading of the brief: the demand signals, the 2.1M claims and 11-minute median, the 15% and 3.4%, questions about whether piles and logic are the same for all customers, automation versus regulation, what bulk sorting is, and why the 15% and 3.4% happen: queue, complex decision, data missing, person changed.">
+      </figure>
+      <p class="step-summary">Then created a <a href=".cursor/skills/keelwater-step-1-problem-notes/SKILL.md">skill file in Cursor</a> with the points below, to refer to each time I am building the solution.</p>
+
+      <div class="note-group">
+        <h3>Understand the customer</h3>
+        <ul>
+          <li>Who is the customer? The insurer buying Keelwater, the handler using it all day, and the person waiting to be paid.</li>
+          <li>Customer pain: why sorting? Speed, handler time, a standard for what belongs in which pile (sorting logic), slow claim settlement time.</li>
+          <li>Criteria for sorting: is it based on the information in the claim? Is it a standard or interpreted manually by each handler?</li>
+          <li>Why do claims change piles? Information arrives late, or questions are answered after the first sort.</li>
+          <li>Does each customer have its own sorting logic?</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>Commercial pressure</h3>
+        <ul>
+          <li>Sales says it is blocking deals: a sales opportunity.</li>
+          <li>Customer Success says it is hurting accounts: a retention risk.</li>
+          <li>Every customer matters.</li>
+          <li>Support is impacted.</li>
+          <li>Risk of losing customers to a competitor.</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>Data</h3>
+        <ul>
+          <li>Keelwater customers sorted 2.1M claims in the last 12 months.</li>
+          <li>Median time to sort is 11 minutes. Is it the same for the customers asking for automation, and what does good look like?</li>
+          <li>15% of claims (about 315,000) take more than 4 hours to sort.</li>
+          <li>3.4% of claims (about 71,400) move to a different pile within 30 days.</li>
+          <li>These are the claims that would benefit. What does that mean in time saved and value added?</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>Regulation</h3>
+        <ul>
+          <li>Which decisions about a claim must be explained to the customer and the regulator, and does the sorting logic matter in that? For example, a claim delayed because our logic said it was not high priority.
+            <ul>
+              <li>My interpretation of what they might ask: "Why was my claim held for investigation when a similar one was paid quickly?" or "Show us the criteria that put this claim in the suspicious pile, and whether a person or a system applied them."</li>
+            </ul>
+          </li>
+          <li>Risk level: how much automation, what regulation applies, and is a human in the loop?</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>Existing work</h3>
+        <ul>
+          <li>Bulk sorting ships in 6 weeks: do I keep it or stop it?</li>
+          <li>How is a new approach different from the old prototype, based on what new information, and what can AI do now that it could not 18 months ago?</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>Team</h3>
+        <ul>
+          <li>We have a designer: what does that mean for how we build (SDLC impact)?</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>Metrics</h3>
+        <ul>
+          <li>Claim handling time.</li>
+          <li>How fast people get paid.</li>
+          <li>AI evals.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

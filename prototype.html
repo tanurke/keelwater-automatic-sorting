@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prototype | Keelwater automatic sorting</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --color-success: #15803d;
+      --color-success-soft: #e8f7ee;
+      --color-danger: #b91c1c;
+      --color-danger-soft: #fde8e8;
+      --color-sidebar: #16181d;
+      --color-sidebar-text: #c9ccd3;
+    }
+
+    .proto-main { max-width: 1360px; padding-top: 32px; }
+    .proto-main .page-title { font-size: 28px; margin-bottom: 4px; }
+    .proto-intro { color: var(--color-muted); margin: 0 0 20px; font-size: 15px; }
+
+    .app {
+      display: grid; grid-template-columns: 196px minmax(0, 1fr);
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius); overflow: hidden; min-height: 720px;
+      box-shadow: 0 12px 32px rgba(20, 20, 30, 0.06);
+    }
+    .app-side { background: var(--color-sidebar); padding: 18px 10px; display: flex; flex-direction: column; gap: 2px; }
+    .app-brand { color: #fff; font-weight: 700; font-size: 15px; margin: 0 10px 18px; letter-spacing: 0.01em; }
+    .side-link {
+      font: inherit; font-size: 14px; text-align: left; background: none; border: 0; border-radius: 8px;
+      color: var(--color-sidebar-text); padding: 9px 10px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+    }
+    .side-link:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+    .side-link[aria-current="page"] { background: rgba(255, 255, 255, 0.12); color: #fff; font-weight: 600; }
+    .side-link:focus-visible, .btn:focus-visible, .tab:focus-visible, .row-open:focus-visible, .switch:focus-visible, .reason-btn:focus-visible {
+      outline: 2px solid var(--color-accent); outline-offset: 2px;
+    }
+    .count { font-size: 12px; background: rgba(255, 255, 255, 0.14); border-radius: 999px; padding: 0 8px; }
+
+    .app-body { display: flex; flex-direction: column; min-width: 0; }
+    .app-view { min-width: 0; }
+    .app-top {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      padding: 12px 22px; border-bottom: 1px solid var(--color-border); font-size: 14px;
+    }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .muted { color: var(--color-muted); }
+    .small { font-size: 12px; }
+
+    .banner { margin: 14px 22px 0; padding: 10px 14px; border-radius: 8px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .banner-danger { background: var(--color-danger-soft); color: var(--color-danger); }
+
+    .view-pad { padding: 20px 22px 28px; }
+    .view-title { font-size: 20px; margin: 0 0 16px; }
+    .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); margin: 26px 0 10px; }
+
+    /* Queue */
+    .queue { display: grid; grid-template-columns: minmax(0, 1fr) 340px; width: 100%; min-width: 0; }
+    .queue-list { padding: 16px 18px; min-width: 0; overflow-x: auto; }
+    .review { min-width: 0; border-left: 1px solid var(--color-border); background: #fbfbfa; padding: 18px 16px; overflow-y: auto; max-height: calc(100vh - 180px); }
+
+    .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--color-border); margin-bottom: 12px; }
+    .tab {
+      font: inherit; font-size: 14px; background: none; border: 0; border-bottom: 2px solid transparent;
+      padding: 8px 10px; cursor: pointer; color: var(--color-muted); margin-bottom: -1px;
+    }
+    .tab[aria-selected="true"] { color: var(--color-text); border-bottom-color: var(--color-accent); font-weight: 600; }
+
+    .bulk { display: flex; align-items: center; gap: 10px; background: var(--color-accent-soft); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; font-size: 14px; }
+    .bulk select { font: inherit; font-size: 13px; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--color-border); }
+
+    .qtable { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .qtable th { text-align: left; font-size: 12px; font-weight: 600; color: var(--color-muted); padding: 6px 8px; border-bottom: 1px solid var(--color-border); }
+    .qtable td { padding: 10px 8px; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+    .qtable tbody tr { cursor: pointer; }
+    .qtable tbody tr:hover { background: var(--color-bg); }
+    .qtable tbody tr.is-selected { background: var(--color-accent-soft); }
+    .row-open { font: inherit; font-weight: 600; background: none; border: 0; padding: 0; cursor: pointer; color: var(--color-text); }
+    .empty { color: var(--color-muted); font-size: 14px; padding: 28px 8px; text-align: center; }
+
+    .pile { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .pile-simple { background: var(--color-success-soft); color: var(--color-success); }
+    .pile-closer { background: var(--color-human-soft); color: var(--color-human); }
+    .pile-suspicious { background: var(--color-danger-soft); color: var(--color-danger); }
+    .src { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 4px; margin-left: 6px; white-space: nowrap; }
+    .src:first-child { margin-left: 0; }
+    .src-rule { background: var(--color-accent-soft); color: var(--color-accent); }
+    .src-ai { background: var(--color-ai-soft); color: var(--color-ai); }
+    .src-person { background: var(--color-human-soft); color: var(--color-human); }
+
+    /* Review panel */
+    .review h2 { font-size: 18px; margin: 0; }
+    .review-sub { font-size: 13px; color: var(--color-muted); margin: 2px 0 14px; }
+    .suggest { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 12px 14px; }
+    .suggest-rule { border-left: 3px solid var(--color-accent); }
+    .suggest-ai { border-left: 3px solid var(--color-ai); }
+    .suggest-person { border-left: 3px solid var(--color-human); }
+    .suggest-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; }
+    .suggest-pile { font-size: 15px; margin: 8px 0 6px; font-weight: 600; }
+    .checks, .reasons { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
+    .checks li { padding: 2px 0; }
+    .checks li::before { content: "\2713"; color: var(--color-success); font-weight: 700; margin-right: 8px; }
+    .reasons li { padding: 2px 0; }
+    .reason-btn { font: inherit; font-size: 13px; background: none; border: 0; padding: 0; color: var(--color-ai); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; text-align: left; }
+
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0 4px; }
+    .btn { font: inherit; font-size: 13px; padding: 7px 13px; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-surface); cursor: pointer; }
+    .btn:hover { background: var(--color-bg); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+    .btn-primary:hover { background: var(--color-accent); filter: brightness(0.92); }
+    .btn-danger { color: var(--color-danger); border-color: var(--color-danger); }
+    .btn-small { font-size: 12px; padding: 4px 10px; }
+
+    .form { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 12px 14px; margin-top: 10px; font-size: 13px; }
+    .form fieldset { border: 0; padding: 0; margin: 0 0 10px; }
+    .form legend { font-weight: 600; margin-bottom: 6px; }
+    .form label { display: block; margin: 4px 0; }
+    .form select { font: inherit; font-size: 13px; padding: 6px 8px; border-radius: 6px; border: 1px solid var(--color-border); width: 100%; }
+
+    .status-line { font-size: 13px; padding: 10px 12px; border-radius: 8px; background: var(--color-bg); }
+
+    .route { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; list-style: none; margin: 0 0 14px; padding: 0; font-size: 11.5px; }
+    .route-step { padding: 2px 8px; border-radius: 999px; background: var(--color-bg); border: 1px solid var(--color-border); color: var(--color-muted); }
+    .route-step + .route-step::before { content: "\2192"; color: var(--color-muted); margin: 0 6px 0 -2px; }
+    .route-rule { background: var(--color-accent-soft); border-color: transparent; color: var(--color-accent); }
+    .route-ai { background: var(--color-ai-soft); border-color: transparent; color: var(--color-ai); font-weight: 600; }
+    .route-person { background: var(--color-human-soft); border-color: transparent; color: var(--color-human); }
+    .route-hold { background: var(--color-human-soft); border-color: transparent; color: var(--color-human); }
+
+    .ai-missing { border-top: 1px dashed var(--color-border); margin-top: 10px; padding-top: 8px; }
+    .ai-missing-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; margin-top: 4px; }
+
+    .facts { display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; font-size: 13px; margin: 0; }
+    .facts dt { color: var(--color-muted); }
+    .facts dd { margin: 0; }
+    .doc { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.55; margin-bottom: 8px; }
+    .doc-name { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-muted); margin-bottom: 4px; }
+    .doc mark { background: var(--color-ai-soft); border-radius: 3px; padding: 0 2px; }
+    .doc mark.flash { outline: 2px solid var(--color-ai); }
+    .photo {
+      height: 110px; border-radius: 6px; display: flex; align-items: flex-end; padding: 8px; color: #fff; font-size: 12px;
+      background: linear-gradient(135deg, #5d6b7a, #2f3a46);
+    }
+
+    /* Rules */
+    .policy { list-style: none; margin: 0; padding: 0; border: 1px solid var(--color-border); border-radius: 10px; }
+    .policy li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--color-border); font-size: 14px; }
+    .policy li:last-child { border-bottom: 0; }
+    .lock::before { content: "\1F512"; font-size: 12px; margin-right: 8px; }
+
+    .rule { border: 1px solid var(--color-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+    .rule-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+    .rule-id { font-size: 12px; font-weight: 700; color: var(--color-accent); margin-right: 6px; }
+    .rule-logic { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 10px 0 12px; font-size: 13px; }
+    .cond { background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 6px; padding: 2px 8px; }
+    .arrow { color: var(--color-muted); }
+
+    .stepper { display: grid; grid-template-columns: repeat(4, 1fr); list-style: none; margin: 0; padding: 0; counter-reset: step; }
+    .stepper li { position: relative; font-size: 12px; color: var(--color-muted); padding-top: 18px; }
+    .stepper li::before { content: ""; position: absolute; top: 4px; left: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--color-border); }
+    .stepper li::after { content: ""; position: absolute; top: 8px; left: 14px; right: 4px; height: 2px; background: var(--color-border); }
+    .stepper li:last-child::after { display: none; }
+    .stepper li.done::before, .stepper li.done::after { background: var(--color-accent); }
+    .stepper li.current { color: var(--color-text); font-weight: 600; }
+    .stepper li.current::before { background: var(--color-accent); box-shadow: 0 0 0 4px var(--color-accent-soft); }
+    .stepper li.blocked::before { background: var(--color-danger); box-shadow: 0 0 0 4px var(--color-danger-soft); }
+
+    .rmetrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 14px 0 0; }
+    .rmetric { background: var(--color-bg); border-radius: 8px; padding: 8px 10px; }
+    .rmetric b { display: block; font-size: 16px; }
+    .rmetric span { font-size: 11px; color: var(--color-muted); }
+    .rmetric.fail b { color: var(--color-danger); }
+    .rule-fail { color: var(--color-danger); font-size: 13px; margin: 10px 0 0; }
+
+    .bars { display: flex; align-items: flex-end; gap: 4px; height: 64px; margin-top: 10px; }
+    .bars div { flex: 1; background: var(--color-accent-soft); border-radius: 3px 3px 0 0; }
+    .bars div.hot { background: var(--color-human); }
+    .bar-labels { display: flex; gap: 4px; font-size: 10px; color: var(--color-muted); }
+    .bar-labels span { flex: 1; text-align: center; }
+    .watch { border: 1px solid var(--color-border); border-radius: 10px; padding: 14px 16px; }
+    .watch-head { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+
+    /* Dashboard */
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .kpi { border: 1px solid var(--color-border); border-radius: 10px; padding: 12px 14px; }
+    .kpi span { font-size: 12px; color: var(--color-muted); display: block; }
+    .kpi b { font-size: 22px; display: block; margin: 2px 0; }
+    .kpi.danger { border-color: var(--color-danger); background: var(--color-danger-soft); }
+    .kpi.danger b { color: var(--color-danger); }
+
+    .control { border: 1px solid var(--color-border); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
+    .control-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .control-head p { margin: 2px 0 0; }
+    .ready { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .ready-item { font-size: 12px; border-radius: 999px; padding: 3px 10px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--color-border); }
+    .ready-item.ok { background: var(--color-success-soft); border-color: transparent; color: var(--color-success); }
+    .ready-item.ok::before { content: "\2713"; font-weight: 700; }
+    .ready-item button { font: inherit; font-size: 12px; background: none; border: 0; color: var(--color-accent); cursor: pointer; padding: 0; text-decoration: underline; }
+
+    .switch-wrap { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+    .switch {
+      width: 42px; height: 24px; border-radius: 999px; border: 0; background: var(--color-border);
+      position: relative; cursor: pointer; flex-shrink: 0; padding: 0;
+    }
+    .switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left 0.15s; }
+    .switch[aria-checked="true"] { background: var(--color-success); }
+    .switch[aria-checked="true"]::after { left: 21px; }
+    .switch:disabled { cursor: not-allowed; opacity: 0.5; }
+
+    .sample-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--color-border); font-size: 14px; flex-wrap: wrap; }
+    .sample-row:last-child { border-bottom: 0; }
+
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--color-text); color: #fff;
+      padding: 10px 16px; border-radius: 8px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .toast.show { opacity: 1; }
+
+    @media (max-width: 1100px) {
+      .queue { grid-template-columns: 1fr; }
+      .review { border-left: 0; border-top: 1px solid var(--color-border); max-height: none; }
+      .kpis, .rmetrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; }
+      .app-side { flex-direction: row; flex-wrap: wrap; }
+      .app-brand { width: 100%; margin-bottom: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="site-title">Keelwater: automatic sorting</p>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Starting Point</a></li>
+          <li><a href="ai-brainstorming.html">AI Brainstorming</a></li>
+          <li><a href="ai-challenged.html">Where I Challenged AI</a></li>
+          <li><a href="solution.html">Slides preparation using AI</a></li>
+          <li><a href="prototype.html" aria-current="page">Prototype</a></li>
+          <li><a href="slides.html">Final submission</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="proto-main">
+    <h1 class="page-title">Prototype</h1>
+    <p class="proto-intro">Keelwater sorting for Customer X, a fictional motor insurer. All claims, rules and numbers are invented.</p>
+
+    <div class="app">
+      <nav class="app-side" aria-label="Product">
+        <p class="app-brand">Keelwater</p>
+        <button type="button" class="side-link" data-action="view" data-view="queue">Queue <span class="count" id="count-queue"></span></button>
+        <button type="button" class="side-link" data-action="view" data-view="rules">Rules</button>
+        <button type="button" class="side-link" data-action="view" data-view="dashboard">Dashboard</button>
+      </nav>
+      <div class="app-body">
+        <div class="app-top">
+          <div><b>Customer X</b> <span class="muted">· Motor claims</span></div>
+          <div class="muted">Sam Okafor, claims handler</div>
+        </div>
+        <div id="banner"></div>
+        <div id="view" class="app-view"></div>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      var PILE = { simple: "Simple", closer: "Needs a closer look", suspicious: "Suspicious" };
+      var STAGE = { drafted: 0, tested: 1, suggesting: 2, auto: 3 };
+      var STAGE_LABEL = ["Drafted from past claims", "Tested on history", "Suggesting", "Auto-sorting"];
+      var STATUS = { review: "review", waiting: "waiting", auto: "auto", sorted: "sorted" };
+      var SUGGESTION = { rule: "rule", ai: "ai", person: "person", none: "none" };
+      var ACTOR = { rule: "rule", ai: "ai", person: "person" };
+      var READY_ITEMS = [
+        ["history", "Tested on history"],
+        ["live", "4 weeks suggesting"]
+      ];
+      var CHANGE_REASONS = ["Evidence contradicts the suggestion", "Policy detail", "Risk concern", "Missing information", "Other"];
+      var MISSING_ITEMS = ["Photo of the damage", "Repair estimate", "Receipt", "Police reference"];
+
+      var rules = [
+        {
+          id: "R1", name: "Windscreen, small and clean", pile: "simple", stage: STAGE.suggesting,
+          conditions: ["Windscreen", "Under £500", "Photo attached", "No claim in 2 years"],
+          results: { agreement: [94, 90], coverage: [22, 20], error: [0.8, 1.9], harmful: 0 },
+          ready: { history: true, live: true, compliance: false, customer: false, sample: true }
+        },
+        {
+          id: "R2", name: "Door mirror with receipt", pile: "simple", stage: STAGE.tested,
+          conditions: ["Door mirror", "Under £300", "Receipt attached"],
+          results: { agreement: [91, 90], coverage: [31, 20], error: [1.2, 2.0], harmful: 0 },
+          ready: { history: true, live: false, compliance: false, customer: false, sample: true }
+        },
+        {
+          id: "R3", name: "Rear bumper under £1,000", pile: "simple", stage: STAGE.tested,
+          conditions: ["Rear bumper", "Under £1,000", "Estimate attached"],
+          results: { agreement: [71, 90], coverage: [38, 20], error: [4.1, 2.6], harmful: 3 },
+          failNote: "Handlers disagree on these claims. Agree the standard with Customer X first.",
+          ready: { history: false, live: false, compliance: false, customer: false, sample: false }
+        },
+        {
+          id: "R4", name: "Hail, inside a storm event", pile: "simple", stage: STAGE.drafted,
+          conditions: ["Hail damage", "Inside a storm event", "Under £2,000", "Estimate attached"],
+          results: null,
+          pendingResults: { agreement: [93, 90], coverage: [24, 20], error: [1.0, 1.7], harmful: 0 },
+          ready: { history: false, live: false, compliance: false, customer: false, sample: true }
+        }
+      ];
+
+      var claims = [
+        {
+          id: "CLM-50101", type: "Windscreen", amount: 180, wait: "2h 05m", status: STATUS.review, rule: "R1",
+          facts: [["Policy age", "4 years"], ["Previous claims", "None in 36 months"], ["Risk flags", "None"]],
+          docs: [{ name: "Claim form", text: "A stone hit the windscreen on the A64. Small chip on the passenger side." }, { name: "Photo", photo: "Windscreen, small chip" }]
+        },
+        {
+          id: "CLM-50102", type: "Windscreen", amount: 240, wait: "1h 48m", status: STATUS.review, rule: "R1",
+          facts: [["Policy age", "6 years"], ["Previous claims", "None in 52 months"], ["Risk flags", "None"]],
+          docs: [{ name: "Claim form", text: "Chip from road debris on the driver's side." }, { name: "Photo", photo: "Windscreen, chip, driver side" }]
+        },
+        {
+          id: "CLM-50109", type: "Windscreen", amount: 460, wait: "2h 30m", status: STATUS.review,
+          noRule: "R1 needs no claim in 2 years",
+          ai: {
+            pile: "closer", confidence: "Medium", model: "m5",
+            reasons: [
+              { label: "Form says one chip, repairer says two cracks", quotes: ["one small chip", "Two cracks visible"] },
+              { label: "Replacement, not a repair", quotes: ["Replacement needed, not a repair"] },
+              { label: "Claim in the last 2 years", quotes: ["Previous claim in March last year"] }
+            ]
+          },
+          facts: [["Policy age", "3 years"], ["Previous claims", "1 in the last 2 years"], ["Risk flags", "None"]],
+          docs: [
+            { name: "Claim form", text: "A stone hit the windscreen on the motorway. There is one small chip on the driver's side. Previous claim in March last year for a door mirror." },
+            { name: "Repairer's note", text: "Two cracks visible. One runs across the passenger side, about 30 cm. Replacement needed, not a repair." }
+          ]
+        },
+        {
+          id: "CLM-50107", type: "Front-end collision", amount: 4850, wait: "3h 40m", status: STATUS.review,
+          noRule: "third-party collision",
+          ai: {
+            pile: "closer", confidence: "Medium", model: "m5",
+            reasons: [
+              { label: "Third party involved, liability not agreed", quotes: ["The other driver pulled out from a side road"] },
+              { label: "Above the £2,000 routine limit", quotes: ["Total £4,850"] }
+            ],
+            missing: [
+              { label: "Third party's insurer details", quotes: ["I have not yet received the other driver's insurance details"] }
+            ]
+          },
+          facts: [["Policy age", "6 years"], ["Previous claims", "None in 60 months"], ["Risk flags", "None"]],
+          docs: [
+            { name: "Claim form", text: "Collision at Mill Road and High Street on 14 October. The other driver pulled out from a side road. Police reference 4471/14OCT. I have not yet received the other driver's insurance details." },
+            { name: "Garage estimate", text: "Front bumper, bonnet and nearside headlamp. Parts £3,120. Labour £1,730. Total £4,850." }
+          ]
+        },
+        {
+          id: "CLM-50103", type: "Door mirror", amount: 95, wait: "3h 10m", status: STATUS.review, rule: "R2",
+          facts: [["Policy age", "5 years"], ["Previous claims", "None in 60 months"], ["Risk flags", "None"]],
+          docs: [{ name: "Claim form", text: "Mirror clipped by another car in a supermarket car park." }, { name: "Receipt", text: "Door mirror unit, fitted. £95.00." }]
+        },
+        {
+          id: "CLM-50104", type: "Windscreen", amount: 495, wait: "1h 12m", status: STATUS.review, rule: "R1", knownAnswer: true,
+          facts: [["Policy age", "9 days"], ["Previous claims", "None"], ["Risk flags", "None"]],
+          docs: [{ name: "Claim form", text: "Crack across the windscreen after a stone strike." }, { name: "Photo", photo: "Windscreen, long crack" }]
+        },
+        {
+          id: "CLM-50110", type: "Hail damage", amount: 1320, wait: "4h 15m", status: STATUS.review, rule: "R4",
+          noRule: "Hail rule R4 not approved yet",
+          ai: {
+            pile: "simple", confidence: "High", model: "m5",
+            reasons: [
+              { label: "Inside the 12 October storm", quotes: ["during the storm on 12 October"] },
+              { label: "Typical repair for hail", quotes: ["Paintless dent repair, roof and bonnet"] }
+            ]
+          },
+          facts: [["Policy age", "7 years"], ["Previous claims", "None in 48 months"], ["Risk flags", "None"]],
+          docs: [
+            { name: "Claim form", text: "Hail damage to the roof and bonnet during the storm on 12 October. Parked outside my home." },
+            { name: "Garage estimate", text: "Paintless dent repair, roof and bonnet. Total £1,320." }
+          ]
+        },
+        {
+          id: "CLM-50106", type: "Windscreen", amount: 220, wait: "50m", status: STATUS.review, person: "Vulnerable customer",
+          facts: [["Policy age", "11 years"], ["Customer note", "Recent bereavement"], ["Risk flags", "None"]],
+          docs: [{ name: "Claim form", text: "Windscreen cracked. Please call rather than email." }, { name: "Photo", photo: "Windscreen, crack" }]
+        },
+        {
+          id: "CLM-50108", type: "Theft of vehicle", amount: 12400, wait: "25m", status: STATUS.review, person: "Open fraud investigation",
+          facts: [["Policy age", "19 days"], ["Fraud team", "Investigation open on claimant"], ["Previous claims", "2 at another insurer"]],
+          docs: [{ name: "Claim form", text: "Car taken from outside my house overnight. Keys are with me." }]
+        },
+        {
+          id: "CLM-50105", type: "Windscreen", amount: 310, wait: "1h 40m", status: STATUS.waiting, rule: "R1", missing: "Photo of the damage", requested: "1h 40m ago",
+          facts: [["Policy age", "8 years"], ["Previous claims", "None in 48 months"], ["Risk flags", "None"]],
+          docs: [{ name: "Claim form", text: "Chip in the windscreen after driving behind a lorry." }]
+        }
+      ];
+
+      var state = {
+        view: "queue",
+        tab: STATUS.review,
+        selected: "CLM-50101",
+        checked: {},
+        form: null,
+        flash: null,
+        sample: {},
+        sampleForm: null,
+        harmful: 0,
+        resorted: 0,
+        pausedFor: null,
+        log: [
+          { t: "07:58", claim: "R1", what: "Started suggesting", by: "Priya Shah, claims lead", kind: ACTOR.person, reason: "" },
+          { t: "07:40", claim: "R4", what: "Drafted from past claims", by: "AI, reviewed by Priya Shah", kind: ACTOR.ai, reason: "" }
+        ]
+      };
+
+      function esc(value) {
+        return String(value).replace(/[&<>"']/g, function (ch) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch];
+        });
+      }
+      function money(amount) { return "£" + amount.toLocaleString("en-GB"); }
+      function clock() {
+        var d = new Date();
+        return String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+      }
+      function pileChip(pile) { return '<span class="pile pile-' + pile + '">' + PILE[pile] + "</span>"; }
+      function ruleById(id) { return rules.filter(function (r) { return r.id === id; })[0] || null; }
+      function claimById(id) { return claims.filter(function (c) { return c.id === id; })[0] || null; }
+      function claimsIn(status) { return claims.filter(function (c) { return c.status === status; }); }
+
+      function rulePasses(rule) {
+        var m = rule.results;
+        return !!m && m.agreement[0] >= m.agreement[1] && m.coverage[0] >= m.coverage[1] && m.error[0] < m.error[1] && m.harmful === 0;
+      }
+      function isReady(rule) {
+        return READY_ITEMS.every(function (item) { return rule.ready[item[0]]; });
+      }
+
+      function suggestionFor(claim) {
+        if (claim.person) return { kind: SUGGESTION.person, label: claim.person };
+        var rule = claim.rule ? ruleById(claim.rule) : null;
+        if (rule && rule.stage >= STAGE.suggesting) return { kind: SUGGESTION.rule, pile: rule.pile, rule: rule };
+        if (claim.ai) return { kind: SUGGESTION.ai, pile: claim.ai.pile, ai: claim.ai };
+        return { kind: SUGGESTION.none };
+      }
+
+      function addLog(claim, what, by, kind, reason) {
+        state.log.unshift({ t: clock(), claim: claim, what: what, by: by, kind: kind, reason: reason || "" });
+      }
+
+      var toastTimer = null;
+      function toast(message) {
+        var el = document.getElementById("toast");
+        el.textContent = message;
+        el.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { el.classList.remove("show"); }, 2400);
+      }
+
+      function applyAutomation() {
+        claims.forEach(function (claim) {
+          if (claim.status !== STATUS.review || !claim.rule || claim.knownAnswer) return;
+          var rule = ruleById(claim.rule);
+          if (rule && rule.stage === STAGE.auto) {
+            claim.status = STATUS.auto;
+            claim.sortedPile = rule.pile;
+            claim.sortedBy = rule.id;
+            addLog(claim.id, "Auto-sorted " + PILE[rule.pile], "Rule " + rule.id + " v1", ACTOR.rule);
+          }
+        });
+        if (state.selected && claimById(state.selected) && claimById(state.selected).status !== state.tab) selectNext();
+      }
+
+      function selectNext() {
+        var next = claimsIn(state.tab)[0];
+        state.selected = next ? next.id : null;
+        state.form = null;
+        state.flash = null;
+      }
+
+      /* ---------- Queue ---------- */
+
+      function suggestionCell(claim) {
+        var s = suggestionFor(claim);
+        if (s.kind === SUGGESTION.rule) return pileChip(s.pile) + '<span class="src src-rule">Rule ' + s.rule.id + "</span>";
+        if (s.kind === SUGGESTION.ai) return pileChip(s.pile) + '<span class="src src-ai">AI</span>';
+        if (s.kind === SUGGESTION.person) return '<span class="src src-person">Needs a person</span>';
+        return '<span class="muted small">No suggestion</span>';
+      }
+
+      function queueTable() {
+        var list = claimsIn(state.tab);
+        if (!list.length) {
+          var emptyText = {
+            review: "Queue is clear.",
+            waiting: "Nothing waiting for information.",
+            auto: "Nothing auto-sorted yet."
+          }[state.tab];
+          return '<p class="empty">' + emptyText + "</p>";
+        }
+        var head, rows;
+        if (state.tab === STATUS.review) {
+          head = '<th scope="col"><span class="visually-hidden">Select</span></th><th scope="col">Claim</th><th scope="col">Type</th><th scope="col">Amount</th><th scope="col">Waiting</th><th scope="col">Suggestion</th>';
+          rows = list.map(function (c) {
+            var bulkable = !c.person;
+            return '<tr data-action="select" data-id="' + c.id + '"' + (state.selected === c.id ? ' class="is-selected"' : "") + ">" +
+              '<td><input type="checkbox" data-action="check" data-id="' + c.id + '" aria-label="Select ' + c.id + '"' +
+              (state.checked[c.id] ? " checked" : "") + (bulkable ? "" : " disabled") + "></td>" +
+              '<td><button type="button" class="row-open" data-action="select" data-id="' + c.id + '">' + c.id + "</button></td>" +
+              "<td>" + esc(c.type) + "</td><td>" + money(c.amount) + "</td><td>" + c.wait + "</td><td>" + suggestionCell(c) + "</td></tr>";
+          }).join("");
+        } else if (state.tab === STATUS.waiting) {
+          head = '<th scope="col">Claim</th><th scope="col">Type</th><th scope="col">Waiting for</th><th scope="col">Requested</th><th scope="col"></th>';
+          rows = list.map(function (c) {
+            return '<tr data-action="select" data-id="' + c.id + '"' + (state.selected === c.id ? ' class="is-selected"' : "") + ">" +
+              '<td><button type="button" class="row-open" data-action="select" data-id="' + c.id + '">' + c.id + "</button></td>" +
+              "<td>" + esc(c.type) + "</td><td>" + esc(c.missing) + "</td><td>" + esc(c.requested) + "</td>" +
+              '<td><button type="button" class="btn btn-small" data-action="received" data-id="' + c.id + '">Mark received</button></td></tr>';
+          }).join("");
+        } else {
+          head = '<th scope="col">Claim</th><th scope="col">Type</th><th scope="col">Amount</th><th scope="col">Pile</th><th scope="col">Sorted by</th>';
+          rows = list.map(function (c) {
+            return '<tr data-action="select" data-id="' + c.id + '"' + (state.selected === c.id ? ' class="is-selected"' : "") + ">" +
+              '<td><button type="button" class="row-open" data-action="select" data-id="' + c.id + '">' + c.id + "</button></td>" +
+              "<td>" + esc(c.type) + "</td><td>" + money(c.amount) + "</td><td>" + pileChip(c.sortedPile) + "</td>" +
+              '<td><span class="src src-rule">Rule ' + c.sortedBy + "</span></td></tr>";
+          }).join("");
+        }
+        return '<table class="qtable"><thead><tr>' + head + "</tr></thead><tbody>" + rows + "</tbody></table>";
+      }
+
+      function bulkBar() {
+        var ids = Object.keys(state.checked).filter(function (id) { return state.checked[id]; });
+        if (state.tab !== STATUS.review || !ids.length) return "";
+        return '<div class="bulk"><b>' + ids.length + " selected</b>" +
+          '<label class="visually-hidden" for="bulk-pile">Pile</label>' +
+          '<select id="bulk-pile"><option value="simple">Simple</option><option value="closer">Needs a closer look</option></select>' +
+          '<button type="button" class="btn btn-primary btn-small" data-action="bulk">Sort selected</button>' +
+          '<button type="button" class="btn btn-small" data-action="clear-checked">Clear</button></div>';
+      }
+
+      function aiEvidence(ai) {
+        return ai.reasons.concat(ai.missing || []);
+      }
+
+      function routeTrail(claim) {
+        var s = suggestionFor(claim);
+        var steps;
+        if (claim.status === STATUS.waiting) {
+          steps = [["Checks passed", ""], ["Missing: " + claim.missing, "hold"], ["Rules run again on arrival", ""]];
+        } else if (claim.status === STATUS.auto) {
+          steps = [["Checks passed", ""], ["Rule " + claim.sortedBy + " matched", "rule"], ["Auto-sorted", "rule"]];
+        } else if (s.kind === SUGGESTION.person) {
+          steps = [["Flag: " + s.label, "person"], ["No suggestion", ""], ["You decide", "person"]];
+        } else if (s.kind === SUGGESTION.rule) {
+          steps = [["Checks passed", ""], ["Rule " + s.rule.id + " matched", "rule"], ["You approve", "person"]];
+        } else if (s.kind === SUGGESTION.ai) {
+          var docCount = claim.docs.filter(function (d) { return !d.photo; }).length;
+          steps = [["Checks passed", ""], ["No rule: " + (claim.noRule || "not covered"), ""], ["AI read " + docCount + " documents", "ai"], ["You decide", "person"]];
+        } else {
+          steps = [["Checks passed", ""], ["No approved rule", ""], ["You decide", "person"]];
+        }
+        return '<ol class="route" aria-label="How this claim was routed">' + steps.map(function (step) {
+          return '<li class="route-step' + (step[1] ? " route-" + step[1] : "") + '">' + esc(step[0]) + "</li>";
+        }).join("") + "</ol>";
+      }
+
+      function docHtml(doc, claim) {
+        if (doc.photo) return '<div class="doc"><p class="doc-name">' + esc(doc.name) + '</p><div class="photo" role="img" aria-label="' + esc(doc.photo) + '">' + esc(doc.photo) + "</div></div>";
+        var html = esc(doc.text);
+        if (claim.ai && suggestionFor(claim).kind === SUGGESTION.ai) {
+          aiEvidence(claim.ai).forEach(function (reason, index) {
+            reason.quotes.forEach(function (quote) {
+              var safe = esc(quote);
+              if (html.indexOf(safe) !== -1) {
+                html = html.replace(safe, '<mark data-r="' + index + '"' + (state.flash === index ? ' class="flash"' : "") + ">" + safe + "</mark>");
+              }
+            });
+          });
+        }
+        return '<div class="doc"><p class="doc-name">' + esc(doc.name) + "</p>" + html + "</div>";
+      }
+
+      function suggestionBlock(claim) {
+        var s = suggestionFor(claim);
+        if (s.kind === SUGGESTION.rule) {
+          return '<div class="suggest suggest-rule"><div class="suggest-top"><span class="src src-rule">Rule ' + s.rule.id + " · v1</span>" +
+            '<span class="muted">' + esc(s.rule.name) + "</span></div>" +
+            '<p class="suggest-pile">' + pileChip(s.pile) + "</p>" +
+            '<ul class="checks">' + s.rule.conditions.map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + "<li>No risk flag</li></ul></div>";
+        }
+        if (s.kind === SUGGESTION.ai) {
+          return '<div class="suggest suggest-ai"><div class="suggest-top"><span class="src src-ai">AI suggestion</span>' +
+            '<span class="muted">Confidence: ' + s.ai.confidence + "</span></div>" +
+            '<p class="suggest-pile">' + pileChip(s.pile) + "</p>" +
+            '<ul class="reasons">' + s.ai.reasons.map(function (r, i) {
+              return '<li><button type="button" class="reason-btn" data-action="quote" data-r="' + i + '">' + esc(r.label) + "</button></li>";
+            }).join("") + "</ul>" +
+            (s.ai.missing && s.ai.missing.length
+              ? '<div class="ai-missing"><span class="small muted">Missing</span>' + s.ai.missing.map(function (m, i) {
+                  var index = s.ai.reasons.length + i;
+                  return '<div class="ai-missing-row"><button type="button" class="reason-btn" data-action="quote" data-r="' + index + '">' + esc(m.label) + "</button>" +
+                    '<button type="button" class="btn btn-small" data-action="request-missing" data-item="' + esc(m.label) + '">Request it</button></div>';
+                }).join("") + "</div>"
+              : "") +
+            "</div>";
+        }
+        if (s.kind === SUGGESTION.person) {
+          return '<div class="suggest suggest-person"><div class="suggest-top"><span class="src src-person">Needs a person</span></div>' +
+            '<p class="suggest-pile">' + esc(s.label) + "</p></div>";
+        }
+        return '<div class="suggest"><p class="muted" style="margin:0">No rule covers this claim yet.</p></div>';
+      }
+
+      function decisionForm(claim) {
+        var s = suggestionFor(claim);
+        if (state.form === "request") {
+          return '<form class="form" data-form="request"><label for="missing-item"><b>What is missing?</b></label>' +
+            '<select id="missing-item" name="missing">' + MISSING_ITEMS.map(function (m) { return "<option>" + m + "</option>"; }).join("") + "</select>" +
+            '<div class="actions"><button type="submit" class="btn btn-primary btn-small">Request and hold</button>' +
+            '<button type="button" class="btn btn-small" data-action="cancel-form">Cancel</button></div></form>';
+        }
+        if (state.form === "change") {
+          var options = Object.keys(PILE).filter(function (p) { return p !== s.pile; });
+          return '<form class="form" data-form="change"><fieldset><legend>Move to</legend>' +
+            options.map(function (p, i) {
+              return '<label><input type="radio" name="pile" value="' + p + '"' + (i === 0 ? " checked" : "") + "> " + PILE[p] + "</label>";
+            }).join("") + "</fieldset>" +
+            '<label for="change-reason"><b>Reason</b></label><select id="change-reason" name="reason" required><option value="">Choose a reason</option>' +
+            CHANGE_REASONS.map(function (r) { return "<option>" + r + "</option>"; }).join("") + "</select>" +
+            '<div class="actions"><button type="submit" class="btn btn-primary btn-small">Confirm</button>' +
+            '<button type="button" class="btn btn-small" data-action="cancel-form">Cancel</button></div></form>';
+        }
+        return "";
+      }
+
+      function reviewPanel() {
+        var claim = state.selected ? claimById(state.selected) : null;
+        if (!claim) return '<p class="empty">Select a claim.</p>';
+        var s = suggestionFor(claim);
+        var html = "<h2>" + claim.id + "</h2>" +
+          '<p class="review-sub">' + esc(claim.type) + " · " + money(claim.amount) + " · waiting " + claim.wait + "</p>" +
+          routeTrail(claim);
+
+        if (claim.status === STATUS.review) {
+          html += suggestionBlock(claim);
+          if (!state.form) {
+            html += '<div class="actions">';
+            if (s.pile) {
+              html += '<button type="button" class="btn btn-primary" data-action="approve">Approve suggestion</button>' +
+                '<button type="button" class="btn" data-action="open-form" data-form="change">Change pile</button>';
+            } else {
+              html += '<button type="button" class="btn btn-primary" data-action="open-form" data-form="change">Choose pile</button>';
+            }
+            html += '<button type="button" class="btn" data-action="open-form" data-form="request">Request information</button></div>';
+          }
+          html += decisionForm(claim);
+        } else if (claim.status === STATUS.waiting) {
+          html += '<p class="status-line">Waiting for <b>' + esc(claim.missing) + "</b>. Rules run again when it arrives.</p>";
+        } else if (claim.status === STATUS.auto) {
+          html += '<p class="status-line">Auto-sorted ' + pileChip(claim.sortedPile) + " by Rule " + claim.sortedBy + ".</p>";
+        }
+
+        html += '<h3 class="section-title">Claim</h3><dl class="facts">' +
+          claim.facts.map(function (f) { return "<dt>" + esc(f[0]) + "</dt><dd>" + esc(f[1]) + "</dd>"; }).join("") + "</dl>";
+        html += '<h3 class="section-title">Documents</h3>' + claim.docs.map(function (d) { return docHtml(d, claim); }).join("");
+        return html;
+      }
+
+      function renderQueue() {
+        var tabs = [[STATUS.review, "To review"], [STATUS.waiting, "Waiting for information"], [STATUS.auto, "Auto-sorted today"]];
+        return '<div class="queue"><section class="queue-list" aria-label="Claims">' +
+          '<div class="tabs" role="tablist">' + tabs.map(function (t) {
+            return '<button type="button" role="tab" class="tab" data-action="tab" data-tab="' + t[0] + '" aria-selected="' + (state.tab === t[0]) + '">' +
+              t[1] + " (" + claimsIn(t[0]).length + ")</button>";
+          }).join("") + "</div>" +
+          bulkBar() + queueTable() + "</section>" +
+          '<aside class="review" aria-label="Claim review">' + reviewPanel() + "</aside></div>";
+      }
+
+      /* ---------- Rules ---------- */
+
+      function ruleMetrics(rule) {
+        var m = rule.results;
+        if (!m) return "";
+        var items = [
+          ["Handlers agree", m.agreement[0] + "%", "bar " + m.agreement[1] + "%", m.agreement[0] >= m.agreement[1]],
+          ["Coverage", m.coverage[0] + "%", "bar " + m.coverage[1] + "%", m.coverage[0] >= m.coverage[1]],
+          ["Wrong pile", m.error[0] + "%", "handlers " + m.error[1] + "%", m.error[0] < m.error[1]],
+          ["Should have been Suspicious", String(m.harmful), "must be 0", m.harmful === 0]
+        ];
+        return '<div class="rmetrics">' + items.map(function (i) {
+          return '<div class="rmetric' + (i[3] ? "" : " fail") + '"><span>' + i[0] + "</span><b>" + i[1] + "</b><span>" + i[2] + "</span></div>";
+        }).join("") + "</div>";
+      }
+
+      function ruleAction(rule) {
+        if (rule.stage === STAGE.drafted) return '<button type="button" class="btn btn-primary btn-small" data-action="replay" data-rule="' + rule.id + '">Test on past claims</button>';
+        if (rule.stage === STAGE.tested && rulePasses(rule)) return '<button type="button" class="btn btn-primary btn-small" data-action="suggest" data-rule="' + rule.id + '">Approve and start suggesting</button>';
+        if (rule.stage === STAGE.tested) return '<button type="button" class="btn btn-small" disabled>Does not pass</button>';
+        if (rule.stage === STAGE.suggesting) return '<button type="button" class="btn btn-small" data-action="view" data-view="dashboard">Dashboard</button>';
+        return '<span class="pile pile-simple">Auto-sorting</span>';
+      }
+
+      function stepper(rule) {
+        var failed = rule.stage === STAGE.tested && !rulePasses(rule);
+        return '<ol class="stepper" aria-label="Rule stage">' + STAGE_LABEL.map(function (label, i) {
+          var cls = i < rule.stage ? "done" : i === rule.stage ? (failed ? "current blocked" : "current") : "";
+          return '<li class="' + cls + '"' + (i === rule.stage ? ' aria-current="step"' : "") + ">" + label + "</li>";
+        }).join("") + "</ol>";
+      }
+
+      function renderRules() {
+        var policy = [
+          ["Open fraud investigation", '<span class="src src-person">A person decides</span>'],
+          ["Vulnerable customer", '<span class="src src-person">A person decides</span>'],
+          ["Same phone or address on other open claims", '<span class="src src-person">A person decides</span>'],
+          ["Over £50,000", pileChip("closer")]
+        ];
+        var bunching = [12, 14, 15, 13, 14, 16, 15, 14, 17, 41];
+        var maxBar = Math.max.apply(null, bunching);
+
+        return '<div class="view-pad"><h2 class="view-title">Rules</h2>' +
+          '<h3 class="section-title">Always checked first</h3><ul class="policy">' +
+          policy.map(function (p) { return '<li><span class="lock">' + p[0] + "</span>" + p[1] + "</li>"; }).join("") + "</ul>" +
+          '<h3 class="section-title">Sorting rules</h3>' +
+          rules.map(function (rule) {
+            return '<article class="rule"><div class="rule-head"><div><span class="rule-id">' + rule.id + "</span><b>" + esc(rule.name) + "</b></div>" + ruleAction(rule) + "</div>" +
+              '<div class="rule-logic">' + rule.conditions.map(function (c) { return '<span class="cond">' + esc(c) + "</span>"; }).join("") +
+              '<span class="arrow" aria-hidden="true">&rarr;</span>' + pileChip(rule.pile) + "</div>" +
+              stepper(rule) + ruleMetrics(rule) +
+              (rule.failNote && rule.stage === STAGE.tested ? '<p class="rule-fail">' + esc(rule.failNote) + "</p>" : "") +
+              "</article>";
+          }).join("") +
+          '<h3 class="section-title">Watched across claims</h3>' +
+          '<div class="watch"><div class="watch-head"><b>Windscreen claims by amount, this week</b><span class="pile pile-closer">41 at £450–£499</span></div>' +
+          '<div class="bars" aria-hidden="true">' + bunching.map(function (v, i) {
+            return '<div style="height:' + Math.round((v / maxBar) * 100) + '%"' + (i === bunching.length - 1 ? ' class="hot"' : "") + "></div>";
+          }).join("") + "</div>" +
+          '<div class="bar-labels" aria-hidden="true">' + ["£0", "£50", "£100", "£150", "£200", "£250", "£300", "£350", "£400", "£450"].map(function (l) { return "<span>" + l + "</span>"; }).join("") + "</div>" +
+          '<p class="muted small" style="margin:8px 0 0">Usually about 15 a band.</p></div>' +
+          "</div>";
+      }
+
+      /* ---------- Dashboard ---------- */
+
+      function readiness(rule) {
+        return '<div class="ready">' + READY_ITEMS.map(function (item) {
+          var ok = rule.ready[item[0]];
+          var extra = item[0] === "live" && ok ? " · catch rate 94%" : "";
+          return '<span class="ready-item' + (ok ? " ok" : "") + '">' + item[1] + extra + "</span>";
+        }).join("") + "</div>";
+      }
+
+      function ruleControl(rule) {
+        var on = rule.stage === STAGE.auto;
+        var canTurnOn = isReady(rule) && !state.pausedFor;
+        var disabled = !on && !canTurnOn;
+        var metrics = rule.results
+          ? '<div class="rmetrics">' +
+            '<div class="rmetric"><span>Correct pile</span><b>' + (100 - rule.results.error[0]).toFixed(1) + '%</b><span>history test</span></div>' +
+            '<div class="rmetric"><span>Coverage</span><b>' + rule.results.coverage[0] + '%</b><span>of eligible claims</span></div>' +
+            '<div class="rmetric"><span>Wrong pile</span><b>' + rule.results.error[0] + '%</b><span>target below ' + rule.results.error[1] + '%</span></div>' +
+            '<div class="rmetric' + (rule.results.harmful > 0 ? " fail" : "") + '"><span>Should be Suspicious</span><b>' + rule.results.harmful + '</b><span>target 0</span></div></div>'
+          : "";
+        return '<div class="control"><div class="control-head"><div><span class="rule-id">' + rule.id + "</span><b>" + esc(rule.name) + "</b>" +
+          '<p class="muted small">' + (on ? "Auto-sorting " + PILE[rule.pile] : "Suggesting. A person approves every claim") + "</p></div>" +
+          '<div class="switch-wrap"><span id="lbl-' + rule.id + '">Auto-sort</span>' +
+          '<button type="button" class="switch" role="switch" aria-labelledby="lbl-' + rule.id + '" aria-checked="' + on + '" data-action="auto" data-rule="' + rule.id + '"' + (disabled ? " disabled" : "") + "></button></div></div>" +
+          metrics + readiness(rule) + "</div>";
+      }
+
+      function dailySample() {
+        var list = claimsIn(STATUS.auto);
+        if (!list.length) return "";
+        return '<h3 class="section-title">Daily sample</h3><div class="control">' + list.map(function (c) {
+          var result = state.sample[c.id];
+          var right;
+          if (result === "ok") right = '<span class="pile pile-simple">Checked</span>';
+          else if (result) right = '<span class="pile pile-' + result + '">Moved to ' + PILE[result] + "</span>";
+          else if (state.sampleForm === c.id) {
+            right = '<form class="switch-wrap" data-form="sample" data-id="' + c.id + '"><label class="visually-hidden" for="sample-pile">Correct pile</label>' +
+              '<select id="sample-pile" name="pile"><option value="closer">Needs a closer look</option><option value="suspicious">Suspicious</option></select>' +
+              '<button type="submit" class="btn btn-small btn-primary">Move</button></form>';
+          } else {
+            right = '<span><button type="button" class="btn btn-small" data-action="sample-ok" data-id="' + c.id + '">Correct</button> ' +
+              '<button type="button" class="btn btn-small" data-action="sample-wrong" data-id="' + c.id + '">Wrong pile</button></span>';
+          }
+          return '<div class="sample-row"><span><b>' + c.id + "</b> " + esc(c.type) + " · " + money(c.amount) + " " + pileChip(c.sortedPile) + "</span>" + right + "</div>";
+        }).join("") + "</div>";
+      }
+
+      function renderAutomation() {
+        var kpis = [
+          ["Queue wait, median", "38m", "was 1h 52m", false],
+          ["Arrival to paid", "2.1 days", "was 3.4 days", false],
+          ["Re-sorted within 30 days", (2.9 + state.resorted * 0.1).toFixed(1) + "%", "was 3.4%", false],
+          ["Simple that should be Suspicious", String(state.harmful), "target 0", state.harmful > 0]
+        ];
+        var active = rules.filter(function (r) { return r.stage >= STAGE.suggesting; });
+        return '<div class="view-pad"><h2 class="view-title">Dashboard</h2>' +
+          '<div class="kpis">' + kpis.map(function (k) {
+            return '<div class="kpi' + (k[3] ? " danger" : "") + '"><span>' + k[0] + "</span><b>" + k[1] + "</b><span>" + k[2] + "</span></div>";
+          }).join("") + "</div>" +
+          '<h3 class="section-title">Rules</h3>' + active.map(ruleControl).join("") +
+          '<h3 class="section-title">AI and Suspicious</h3>' +
+          '<div class="control"><div class="control-head"><div><span class="src src-ai">AI</span> <b>Suggestions on claims no rule covers</b>' +
+          '<p class="muted small">Model m5 · outcome agreement 87% · baseline model 79%</p></div><span class="muted small">Suggest only</span></div></div>' +
+          '<div class="control"><div class="control-head"><div><b class="lock">Suspicious</b></div><span class="src src-person">Always a person</span></div></div>' +
+          dailySample() + "</div>";
+      }
+
+      /* ---------- Render ---------- */
+
+      function render() {
+        document.querySelectorAll(".side-link").forEach(function (link) {
+          if (link.dataset.view === state.view) link.setAttribute("aria-current", "page");
+          else link.removeAttribute("aria-current");
+        });
+        document.getElementById("count-queue").textContent = claimsIn(STATUS.review).length;
+        document.getElementById("banner").innerHTML = state.pausedFor
+          ? '<div class="banner banner-danger" role="alert"><span><b>Auto-sort paused for ' + state.pausedFor + ".</b> A Simple claim should have been Suspicious.</span>" +
+            '<button type="button" class="btn btn-small" data-action="view" data-view="dashboard">Open dashboard</button></div>'
+          : "";
+        var views = { queue: renderQueue, rules: renderRules, dashboard: renderAutomation };
+        document.getElementById("view").innerHTML = views[state.view]();
+      }
+
+      function decide(claim, pile, by, reason) {
+        claim.status = STATUS.sorted;
+        delete state.checked[claim.id];
+        addLog(claim.id, "Sorted " + PILE[pile], by, ACTOR.person, reason);
+        toast(claim.id + " sorted as " + PILE[pile]);
+        selectNext();
+      }
+
+      document.addEventListener("click", function (event) {
+        var target = event.target.closest("[data-action]");
+        if (!target) return;
+        var action = target.dataset.action;
+        if (action === "check") { event.stopPropagation(); return; }
+        var claim = state.selected ? claimById(state.selected) : null;
+
+        if (action === "view") { state.view = target.dataset.view; }
+        else if (action === "tab") { state.tab = target.dataset.tab; selectNext(); }
+        else if (action === "select") { state.selected = target.dataset.id; state.form = null; state.flash = null; }
+        else if (action === "open-form") { state.form = target.dataset.form; }
+        else if (action === "cancel-form") { state.form = null; }
+        else if (action === "quote") { var r = Number(target.dataset.r); state.flash = state.flash === r ? null : r; }
+        else if (action === "approve" && claim) {
+          var s = suggestionFor(claim);
+          addLog(claim.id, "Suggested " + PILE[s.pile], s.kind === SUGGESTION.rule ? "Rule " + s.rule.id + " v1" : "AI model " + s.ai.model, s.kind === SUGGESTION.rule ? ACTOR.rule : ACTOR.ai);
+          decide(claim, s.pile, "Sam Okafor (approved)", "");
+        }
+        else if (action === "clear-checked") { state.checked = {}; }
+        else if (action === "bulk") {
+          var pile = document.getElementById("bulk-pile").value;
+          Object.keys(state.checked).forEach(function (id) {
+            if (!state.checked[id]) return;
+            var c = claimById(id);
+            c.status = STATUS.sorted;
+            addLog(c.id, "Bulk sorted " + PILE[pile], "Sam Okafor", ACTOR.person, "");
+          });
+          toast("Sorted " + Object.keys(state.checked).length + " claims as " + PILE[pile]);
+          state.checked = {};
+          if (claim && claim.status !== STATUS.review) selectNext();
+        }
+        else if (action === "received") {
+          var waiting = claimById(target.dataset.id);
+          event.stopPropagation();
+          waiting.status = STATUS.review;
+          waiting.wait = "just now";
+          if (waiting.missing === "Photo of the damage") waiting.docs.push({ name: "Photo", photo: "Windscreen, chip" });
+          else waiting.docs.push({ name: waiting.missing, text: "Received from the claimant." });
+          if (waiting.ai) waiting.ai.missing = [];
+          addLog(waiting.id, waiting.missing + " received. Rules ran again", "Keelwater", ACTOR.rule);
+          delete waiting.missing;
+          applyAutomation();
+          toast(waiting.status === STATUS.auto ? waiting.id + " auto-sorted" : waiting.id + " back in the queue");
+          if (state.selected === waiting.id) selectNext();
+        }
+        else if (action === "request-missing" && claim) {
+          claim.status = STATUS.waiting;
+          claim.missing = target.dataset.item;
+          claim.requested = "just now";
+          addLog(claim.id, "Found missing: " + claim.missing, "AI model " + claim.ai.model, ACTOR.ai);
+          addLog(claim.id, "Requested " + claim.missing + ". Claim held", "Sam Okafor", ACTOR.person);
+          toast(claim.id + " held until it arrives");
+          selectNext();
+        }
+        else if (action === "replay") {
+          var drafted = ruleById(target.dataset.rule);
+          drafted.results = drafted.pendingResults;
+          drafted.stage = STAGE.tested;
+          drafted.ready.history = rulePasses(drafted);
+          addLog(drafted.id, "Tested on last year's claims", "Keelwater", ACTOR.rule);
+        }
+        else if (action === "suggest") {
+          var tested = ruleById(target.dataset.rule);
+          tested.stage = STAGE.suggesting;
+          addLog(tested.id, "Approved. Started suggesting", "Priya Shah, claims lead", ACTOR.person);
+          toast("Rule " + tested.id + " now suggests a pile");
+        }
+        else if (action === "auto") {
+          var rule = ruleById(target.dataset.rule);
+          if (rule.stage === STAGE.auto) {
+            rule.stage = STAGE.suggesting;
+            addLog(rule.id, "Auto-sort switched off", "Priya Shah, claims lead", ACTOR.person);
+            toast("Auto-sort off for " + rule.id);
+          } else {
+            rule.stage = STAGE.auto;
+            addLog(rule.id, "Auto-sort switched on", "Priya Shah, claims lead", ACTOR.person);
+            applyAutomation();
+            toast("Auto-sort on for " + rule.id);
+          }
+        }
+        else if (action === "sample-ok") { state.sample[target.dataset.id] = "ok"; addLog(target.dataset.id, "Daily sample: correct", "Sam Okafor", ACTOR.person); }
+        else if (action === "sample-wrong") { state.sampleForm = target.dataset.id; }
+        else { return; }
+        render();
+      });
+
+      document.addEventListener("change", function (event) {
+        if (event.target.dataset.action !== "check") return;
+        state.checked[event.target.dataset.id] = event.target.checked;
+        render();
+      });
+
+      document.addEventListener("submit", function (event) {
+        var form = event.target;
+        event.preventDefault();
+        var claim = state.selected ? claimById(state.selected) : null;
+
+        if (form.dataset.form === "change" && claim) {
+          var reason = form.elements.reason.value;
+          if (!reason) { form.elements.reason.focus(); return; }
+          var s = suggestionFor(claim);
+          if (s.pile) addLog(claim.id, "Suggested " + PILE[s.pile], s.kind === SUGGESTION.rule ? "Rule " + s.rule.id + " v1" : "AI model " + s.ai.model, s.kind === SUGGESTION.rule ? ACTOR.rule : ACTOR.ai);
+          decide(claim, form.elements.pile.value, "Sam Okafor" + (s.pile ? " (changed)" : ""), reason);
+        } else if (form.dataset.form === "request" && claim) {
+          claim.status = STATUS.waiting;
+          claim.missing = form.elements.missing.value;
+          claim.requested = "just now";
+          addLog(claim.id, "Requested " + claim.missing + ". Claim held", "Sam Okafor", ACTOR.person);
+          toast(claim.id + " held until " + claim.missing.toLowerCase() + " arrives");
+          selectNext();
+        } else if (form.dataset.form === "sample") {
+          var id = form.dataset.id;
+          var pile = form.elements.pile.value;
+          state.sample[id] = pile;
+          state.sampleForm = null;
+          state.resorted += 1;
+          addLog(id, "Daily sample: moved to " + PILE[pile], "Sam Okafor", ACTOR.person, "Wrong pile");
+          if (pile === "suspicious") {
+            var sampled = claimById(id);
+            var rule = ruleById(sampled.sortedBy);
+            state.harmful += 1;
+            rule.stage = STAGE.suggesting;
+            state.pausedFor = rule.id;
+            addLog(rule.id, "Auto-sort paused", "Keelwater", ACTOR.rule, "Simple that should have been Suspicious");
+          }
+        }
+        render();
+      });
+
+      render();
+    })();
+  </script>
+</body>
+</html>

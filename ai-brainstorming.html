@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Brainstorming | Keelwater automatic sorting</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="site-title">Keelwater: automatic sorting</p>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Starting Point</a></li>
+          <li><a href="ai-brainstorming.html" aria-current="page">AI Brainstorming</a></li>
+          <li><a href="ai-challenged.html">Where I Challenged AI</a></li>
+          <li><a href="solution.html">Slides preparation using AI</a></li>
+          <li><a href="prototype.html">Prototype</a></li>
+          <li><a href="slides.html">Final submission</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">AI Brainstorming</h1>
+    <p class="page-intro">A few of the questions I asked AI, to show how I used it.</p>
+    <article class="qa">
+      <h2 class="qa-question">Is bulk sorting done only in some conditions? What do you think is the customer's pain? Claims keep coming in: is it bulk, too many at once, or does every claim go through it? Or is it complexity in sorting, and the 3.4% might not be resolved with executable logic?</h2>
+      <div class="qa-answer">
+        <p><strong>Bulk sorting:</strong> the brief only says it "lets a handler sort many claims at once", so it's a selection tool: pick many claims, put them all in one pile. A handler would only do that when the claims are obviously alike, for example 300 windscreen claims after a hailstorm, or every claim under £500 from one policy type. So yes, it's useful only under certain conditions: high volume of similar, low-judgement claims. It does nothing for a claim that needs reading.</p>
+        <p><strong>What I think the pain is:</strong> "automatic sorting" is one phrase covering two different problems, and the data points at both.</p>
+        <p><em>Problem A: every claim goes through a human, even the obvious ones.</em> 2.1M claims, most sorted in minutes. If, say, 60-70% are plainly Simple, that's over a million decisions a year where a handler adds nothing but time. Insurers feel this as handler cost, and it's almost certainly what the competitor is selling and what Sales hears in deals. The 11-minute median includes queue time, so the real wasted effort is probably smaller than it looks, but it's real. Automation fits this problem well, and the risk is low because getting a Simple claim wrong costs little.</p>
+        <p><em>Problem B: some claims are hard.</em> The 15% over four hours and the 3.4% that move piles. The 3.4% is probably not fixable with executable logic: the claim changes after the first sort. A document arrives, a question gets answered, an engineer's report comes back. The first sort was right on the information available. That's not a sorting failure, it's a timing problem. The fix there is workflow: flag what's missing, re-check when new information lands, route to the right handler. A model can't know what hasn't arrived yet.</p>
+        <p>The 15% is the least certain. It could be complexity, missing information, or just no handler being free. Those are three different problems and you'd need the data to split them.</p>
+        <p><strong>View, with confidence:</strong></p>
+        <ul>
+          <li>Medium confidence the primary pain is Problem A: handler time spent on obvious claims, made urgent by a competitor now offering to remove it.</li>
+          <li>Medium confidence the 3.4% is mostly late information, not bad sorting, and shouldn't be the target of automation.</li>
+          <li>Low confidence about what drives the 15%; that's the first data question.</li>
+        </ul>
+        <p>If this holds, the product shape follows: automate the obvious Simple pile first with a human able to override, and treat the hard claims as a workflow problem, not a prediction problem. Bulk sorting sits awkwardly in between: it helps with Problem A only when claims arrive in visible clusters, which is why finding out who asked for it matters.</p>
+        <p>The thing to check before trusting any of this: whether the customers asking for automation are high-volume insurers (Problem A) or ones with long settlement times (Problem B). The brief doesn't say, and the answer changes everything.</p>
+      </div>
+    </article>
+
+    <article class="qa qa-wide">
+      <h2 class="qa-question">Now I need to break down different pain points for different types of customers, not just A and B. So in a table: what are the different scenarios, where a customer would need sorting automation, how it helps them, metrics for success for them, and why you think that is the main problem that needs solving.</h2>
+      <div class="qa-answer">
+        <p><strong>Flagged as invented:</strong> the brief does not say how the 180 customers break down. These scenarios are hypotheses to test. Industry terms are from my general knowledge of insurance, not the brief.</p>
+        <p><strong>The phases below are the AI's first answer. They are not the plan.</strong> The next six weeks finish bulk sorting, which is already half built, and, separately, test draft rules on past claims. There is no shadow mode in those six weeks. A person approves every suggestion. Auto-sort only after the numbers pass. Suspicious is always a person. Checks for fraud before a Simple rule are data checks, not a model.</p>
+
+        <div class="phase-key">
+          <strong>How the AI labelled the Solution column</strong>
+          <span><b>Phase 1</b> (next 6 weeks): ship bulk sorting, add the audit log and reason capture, run AI in shadow mode.</span>
+          <span><b>Phase 2</b> (next quarter): AI suggests, auto-sort Simple only, rule templates, re-sort on new information.</span>
+          <span><b>Phase 3</b> (later): auto-route Needs a closer look, Suspicious flags, surge mode, API.</span>
+          <span><b>Parts:</b> Rules = Python rules engine. AI = model suggestion. UI = handler screen. Workflow = events and prompts. Audit = log and explanations. API.</span>
+        </div>
+
+        <div class="table-scroll">
+          <table class="scenario-table scenario-table-wide">
+            <thead>
+              <tr>
+                <th>Customer scenario</th>
+                <th>Pain today</th>
+                <th>Handler impact</th>
+                <th>Risk, and what the regulator asks</th>
+                <th>Success metrics</th>
+                <th>Bulk sorting (ships in 6 weeks) covers it?</th>
+                <th>Solution: what and how</th>
+                <th>Priority</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="group-row"><th colspan="8">A. Who buys, and why they ask</th></tr>
+              <tr>
+                <td><strong>High-volume personal lines</strong><br>Motor, home, travel. Thousands of small, similar claims.</td>
+                <td>Every claim needs a handler, even obvious ones. Cost per claim.</td>
+                <td>Easy claims gone. Queue gets harder. Claims per handler drops: warn managers first.</td>
+                <td><strong>Low.</strong> Wrong Simple = overpaid (leakage). Regulator rarely asks.</td>
+                <td>% auto-sorted. Minutes per claim. Override rate. Time to pay. Leakage in daily sample.</td>
+                <td><strong>Partly.</strong> Only when claims arrive in visible clusters.</td>
+                <td>Auto-sort clearly Simple; handler can override.<br><em>Rules + AI + UI. Phase 1 shadow, Phase 2 live.</em></td>
+                <td><strong>1st.</strong> Biggest volume, lowest risk, what the competitor sells.</td>
+              </tr>
+              <tr>
+                <td><strong>Surge events</strong><br>Storm, flood, recall (CAT events).</td>
+                <td>A month's claims in a week. Backlog. People wait.</td>
+                <td>Relief. Less overtime. Temporary staff get guidance.</td>
+                <td><strong>Medium.</strong> Fraud rises in a surge. Regulators watch handling times.</td>
+                <td>Time to sort in surge. Days to clear backlog. Overtime.</td>
+                <td><strong>Yes.</strong> This is what bulk sorting is for.</td>
+                <td>Bulk sorting now. Later: detect the cluster, auto-sort with fraud checks.<br><em>UI now. Rules + AI Phase 3.</em></td>
+                <td><strong>Finish bulk sorting.</strong> Model later.</td>
+              </tr>
+              <tr>
+                <td><strong>Complex and commercial</strong><br>Liability, injury, commercial property. Few claims, slow, third parties.</td>
+                <td>Slow because information is missing. Likely most of the 15% over 4 hours.</td>
+                <td>Fewer chase-ups. Documents summarised. Pile still theirs.</td>
+                <td><strong>Medium.</strong> Delay is the complaint. Guessing without facts makes it worse.</td>
+                <td>Time to settle. % waiting on information. Touches per claim.</td>
+                <td><strong>No.</strong></td>
+                <td>Not sorting automation. Flag missing info, AI reads documents, re-check when info arrives.<br><em>Workflow + AI. Phase 2 to 3.</em></td>
+                <td><strong>Not for sorting.</strong> Workflow problem.</td>
+              </tr>
+              <tr>
+                <td><strong>Fraud-exposed insurers</strong><br>Motor injury, high-value contents. Have a fraud team.</td>
+                <td>Fraud missed, or honest people investigated. Depends on the handler.</td>
+                <td>Must agree or disagree with a flag about a real person, and say why.</td>
+                <td><strong>Highest.</strong> Harms a real person. Bias risk via postcode, name, age. Regulator: why this person, what evidence?</td>
+                <td>Fraud caught per 1,000. False positives. Complaints. Bias tests.</td>
+                <td><strong>No.</strong></td>
+                <td>AI flags with evidence. Human always decides. Never automatic.<br><em>AI + UI + Audit. Phase 3.</em></td>
+                <td><strong>Later.</strong> After Simple is proven safe.</td>
+              </tr>
+              <tr>
+                <td><strong>Large or outsourced handler teams</strong><br>Many handlers, high turnover.</td>
+                <td>Same claim sorted differently. Hard to audit and train. Part of the 3.4%.</td>
+                <td>Juniors guided. Seniors write rules. Some feel second-guessed.</td>
+                <td><strong>Low to medium.</strong> Consistency is good. A wrong rule is wrong everywhere: test before live.</td>
+                <td>Handler agreement. Re-sort rate. Time to train.</td>
+                <td><strong>No.</strong></td>
+                <td>Codify logic as per-customer rules, reason shown.<br><em>Rules + UI + Audit. Phase 2.</em></td>
+                <td><strong>2nd.</strong> Explainability built in.</td>
+              </tr>
+              <tr>
+                <td><strong>Small and mid-size insurers</strong><br>Few handlers. Probably most of the 180.</td>
+                <td>No slack. No one to write rules.</td>
+                <td>Keeps up without overtime.</td>
+                <td><strong>Low.</strong> May switch on defaults they do not understand.</td>
+                <td>Backlog. Claims per handler. Time to go live.</td>
+                <td><strong>Partly.</strong></td>
+                <td>Default rule templates by line of business, plain language.<br><em>Rules + UI. Phase 2.</em></td>
+                <td><strong>Shapes the solution.</strong> Templates, not a blank editor.</td>
+              </tr>
+              <tr>
+                <td><strong>Large insurers with own triage</strong><br>Own data teams and rules.</td>
+                <td>Two systems. Double handling.</td>
+                <td>One system.</td>
+                <td><strong>Medium.</strong> Who owns the decision when their rule runs in our product.</td>
+                <td>Integration time. % of their rules represented.</td>
+                <td><strong>No.</strong></td>
+                <td>Load their rules or score through an API.<br><em>Rules + API + Audit. Phase 3.</em></td>
+                <td><strong>Not main.</strong> Proves logic must be per-customer.</td>
+              </tr>
+              <tr>
+                <td><strong>Procurement-driven buyers</strong><br>The six deals, some renewals.</td>
+                <td>A checkbox in a tender. Nobody asked what they mean by it.</td>
+                <td>Not asked yet.</td>
+                <td><strong>Theirs.</strong> If they buy automation that cannot be explained.</td>
+                <td>Deals unblocked. Renewals. Time to a demo.</td>
+                <td><strong>Partly.</strong> Something to show.</td>
+                <td>Dated roadmap, pilot with a reference customer, explainability story.<br><em>Communication, not code. Phase 1.</em></td>
+                <td><strong>Not a product problem.</strong> Sequencing and comms.</td>
+              </tr>
+
+              <tr class="group-row"><th colspan="8">B. Who must be protected, whatever we build</th></tr>
+              <tr>
+                <td><strong>The claimant</strong><br>The person waiting to be paid.</td>
+                <td>Waiting. Not knowing. Treated as a suspect.</td>
+                <td>Time goes to people who need a person.</td>
+                <td><strong>Who the regulator protects.</strong> Plain-language reason for every decision.</td>
+                <td>Time to pay. % paid in target days. Complaints.</td>
+                <td><strong>Partly.</strong> Faster in surges.</td>
+                <td>Faster Simple payment. Never slow or wrongly flag to save cost.<br><em>Audit gives plain-language reasons. All phases.</em></td>
+                <td><strong>Metric to protect in every row.</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Vulnerable customers</strong><br>Bereaved, ill, in financial difficulty.</td>
+                <td>Spotted late. Could land in a slow pile.</td>
+                <td>Flag: call, do not email.</td>
+                <td><strong>High.</strong> Regulatory priority. Health signals are sensitive data.</td>
+                <td>Time to pay for flagged claims. Complaints. % spotted early.</td>
+                <td><strong>No.</strong></td>
+                <td>AI spots signals. Moves a claim up, never down.<br><em>AI + Rules. Phase 2.</em></td>
+                <td><strong>Constraint from day one.</strong></td>
+              </tr>
+              <tr>
+                <td><strong>Compliance and audit team</strong><br>Answer the regulator. Sign off automation.</td>
+                <td>Reconstructing old decisions is manual. "The handler decided" disappears with automation.</td>
+                <td>Fewer "why" questions months later.</td>
+                <td><strong>The gate.</strong> Show the decision, reason, rules at the time, who was accountable.</td>
+                <td>Time to answer a query. Audit findings.</td>
+                <td><strong>Partly.</strong> Add reason capture to bulk sorting now.</td>
+                <td>Append-only audit log. Versioned logic. Replay before go-live.<br><em>Audit (Python). Phase 1.</em></td>
+                <td><strong>Build first.</strong> Nothing ships without it.</td>
+              </tr>
+              <tr>
+                <td><strong>Claims that change after first sort</strong><br>The 3.4%. New information arrives later.</td>
+                <td>Nobody re-looks when new information arrives.</td>
+                <td>Prompt: "new information, pile may change".</td>
+                <td><strong>Low.</strong> Goes to a handler.</td>
+                <td>Time from new info to re-sort. The 3.4% rate.</td>
+                <td><strong>No.</strong></td>
+                <td>Re-evaluate on new information. Suggest a re-sort.<br><em>Workflow + Rules. Phase 2.</em></td>
+                <td><strong>Quick win.</strong> Also gives ground truth.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Metric for everyone:</strong> time from claim arriving to the person being paid. Protect it in every row.</p>
+
+        <p><strong>What this points to.</strong> Main problem: handler time and inconsistency on high-volume, low-judgement claims (rows 1 and 5). Rows 6 and 7 shape the solution: per-customer config, templates, an API. Rows 9 to 11 are constraints from day one. Rows 2 and 12 are quick wins. Row 3 is workflow. Row 4 comes later with a human on every decision. Row 8 is communication.</p>
+
+        <p><strong>Build checklist:</strong></p>
+        <ul>
+          <li>Per-customer, versioned sorting logic with plain-language templates. Not code, not one global model.</li>
+          <li>Rules for policy, AI for judgement. AI suggests only inside the rules.</li>
+          <li>Ladder: shadow, suggest, auto-sort Simple, then Needs a closer look. Suspicious is always a human decision.</li>
+          <li>Handler control: one click accept, one click change with a reason. Visible "sorted by system" list, daily sample check, kill switch per customer and pile.</li>
+          <li>Append-only audit log: pile, who or what decided, reason, logic version, time. Plain-language explanation on demand.</li>
+          <li>Any logic change or retrain is replayed on real claims and signed off before live.</li>
+          <li>Vulnerability moves a claim up, never down. Bias tests on anything feeding Suspicious.</li>
+          <li>Re-sort prompt on new information. Missing-info flags and document summaries for complex claims.</li>
+          <li>Tell handler managers that claims per handler will fall and the queue will get harder.</li>
+        </ul>
+
+        <p><strong>Not doing:</strong> automatic Suspicious. One global model. Auto-sort without a shadow-mode result. Automation with no plain-language reason. Building what the deals literally ask for before asking what they mean.</p>
+        <p>I did not keep the shadow-mode start, or the idea that auto-sort has to wait on a shadow-mode result. Auto-sort waits on the rules passing on past claims, and on a person approving.</p>
+
+        <p><strong>Terms:</strong> <em>leakage</em>, money paid that should not have been; <em>CAT event</em>, a catastrophe causing a claims surge; <em>line of business</em>, a product type such as motor or home.</p>
+
+        <p><strong>What would change my mind:</strong> if the customers asking are mostly rows 3 or 4, the first slice is wrong. If most of the 180 are row 6, templates come before any model.</p>
+      </div>
+    </article>
+
+    <article class="qa">
+      <h2 class="qa-question">What is the number the COO watches?</h2>
+      <div class="qa-answer">
+        <p>It's my phrase from the first row of the table: "Handler cost per claim is the number the COO watches." I meant the insurer's cost to handle each claim, worked out roughly as total claims-operations cost (mostly handler salaries) divided by the number of claims handled.</p>
+      </div>
+    </article>
+
+    <article class="qa">
+      <h2 class="qa-question">Doesn't that change the solution we build? If the sorting logic changes, how does our code handle that?</h2>
+      <div class="qa-answer">
+        <p>Yes, and it's the thing most likely to sink a naive build.</p>
+        <p><strong>The problem.</strong> If each of 180 insurers has its own sorting logic, and that logic changes over time (new fraud patterns, a regulator's ruling, a new product line), then a single model trained on everyone's historical claims is wrong for most customers on day one and gets more wrong every month. That's probably part of why the 18-month-old prototype matters less than it looks: a global predictor doesn't fit a per-customer problem.</p>
+        <p><strong>How the code handles it: logic is data, not code.</strong></p>
+        <ul>
+          <li><strong>The sorting logic lives outside the application code</strong>, as versioned configuration per customer. Changing a rule is a config change with an audit trail, not a deploy. The customer's claims-ops lead, or Customer Success on their behalf, can change it.</li>
+          <li><strong>Two layers.</strong> A rules layer that is deterministic and owned by the customer ("under £500, photo attached, no claim in 12 months: Simple"). A suggestion layer, the model, that works inside the boundaries the rules set. Rules are the guardrail; the model never overrides a rule. Every decision traces to a rule version, a model version, or a handler.</li>
+          <li><strong>Every decision records which version of the logic made it.</strong> The regulator asks about a claim from eight months ago; you show the rules as they were then, not as they are now.</li>
+          <li><strong>Replay before switching on.</strong> When logic changes, run the last few months of that customer's claims through the new version and show what would have sorted differently. That's the eval harness, and the same harness decides whether automation is safe.</li>
+          <li><strong>Drift monitoring per customer per version.</strong> Override rate and re-sort rate rising for one customer means their logic has gone stale, or their claims have changed. That's the signal to review it.</li>
+          <li><strong>Model retraining is a logic change too.</strong> Same versioning, same replay gate, same sign-off.</li>
+        </ul>
+        <p><strong>What that does to the product.</strong> It stops being "a model that predicts the pile" and becomes a sorting-logic platform: rules, suggestions, explanations, versioning and evaluation, with a model as one component. More engineering up front and less data science, which matters for a squad of five engineers and no data scientist.</p>
+      </div>
+    </article>
+
+    <article class="qa">
+      <h2 class="qa-question">This last point, can you show me as a proper workflow diagram, more implementation: config has two versions, audit as another arrow, showing rules tested, where is AI, where is Python code. Simple but very clear, cover the steps. This is jumping to solution but I would like to see it now to know if this works or not.</h2>
+      <div class="qa-answer">
+        <p>The diagram is colour-coded: blue is Python code, purple is the AI model, green is UI, amber is a human decision, grey is a data store.</p>
+        <p><strong>Workflow 1: Runtime, how every claim gets sorted.</strong> The AI is in exactly one box (step 4). The gate that decides whether automation is allowed (step 5) is plain Python, no model involved. The audit log records who or what decided: rule v2, model m4, or handler, so the Explanation API can answer a regulator from the log alone.</p>
+        <img class="qa-image" src="images/workflow-runtime.png" alt="Runtime workflow: claim arrives, sorting engine loads active config, rules decide first, AI suggests within rule boundaries, auto-sort gate, handler queue or sorted-by-system list, audit log, explanation API">
+        <p><strong>Does this work?</strong> Yes, as an architecture. The hard part is not the engine: it is getting each insurer's sorting logic out of handlers' heads and into rules, which is a discovery problem, not a code problem. The other hard parts are ground truth for the replay, cold start per customer, one model or many, and threshold choice.</p>
+      </div>
+    </article>
+
+    <article class="qa">
+      <h2 class="qa-question">Can you create a validation slide? What I will do is look at the data and see how much time is spent in the queue, where the four hours come from, from time to open till time to sort. Is that what I'm looking for? What data points should be on it, and what else should I be validating? Also, because I have access to all the different types of claims, can I see how many are Simple, the total count, and if the majority of the 2.1 million are Simple, I will use that.</h2>
+      <div class="qa-answer">
+        <p>Yes, that is the right check, with one refinement. Time to open till time to sort gives you active handling time. You also need the step before it: arrival to first open, which is queue wait. Four timestamps per claim (arrived, first opened, sorted, re-sorted) and you can split the whole 15%.</p>
+        <p>And yes, Keelwater has the pile counts, because the piles live in Keelwater. If most of the 2.1M are Simple, that is the strongest single piece of evidence for the first slice, and it costs one query.</p>
+        <p><strong>Two checks I added that you had not mentioned:</strong></p>
+        <ul>
+          <li><strong>Do handlers at the same insurer agree?</strong> Similar claims, different handlers, different piles. It is the only way to test "the logic lives in their heads" with data rather than a story.</li>
+          <li><strong>Rerun everything for the customers who are asking.</strong> The 180-customer averages could be hiding that the six deals look nothing like the median.</li>
+        </ul>
+        <p>The full list, with what each result does to the plan, is Slide 2 on the <a href="solution.html">Slides preparation using AI</a> page.</p>
+      </div>
+    </article>
+
+    <article class="qa">
+      <h2 class="qa-question">Before anything is automated, what would a prototype look like for getting customer feedback? Is a prototype even the right answer here?</h2>
+      <div class="qa-answer">
+        <p>Yes, but it tests the workflow, not whether the automation is safe. A realistic screen can show whether handlers understand a suggestion, trust it, and know when not to. It cannot prove the rule or model behind it is right. That comes from testing on past claims.</p>
+        <p>Show a handler a few realistic claims: the suggested pile, a plain-language reason, the evidence, anything missing, and accept or change with a reason. Slip in a few suggestions that are deliberately wrong, and watch whether handlers catch them or click through.</p>
+      </div>
+    </article>
+
+    <article class="qa">
+      <h2 class="qa-question">There is no AI at this step, so how do we check for fraud before a Simple rule runs?</h2>
+      <div class="qa-answer">
+        <p>With data checks, not a model. Is there a risk flag on the claim? Is the same phone number or address on other open claims? Those run on every claim before any Simple rule.</p>
+        <p>Claims bunching just under a threshold, such as £495 against a £500 rule, are different. They are not visible on one claim. They are a pattern you watch regularly across all claims.</p>
+      </div>
+    </article>
+
+    <article class="qa">
+      <h2 class="qa-question">Do we need a different model for every customer? Is that feasible? And what does a different model even mean: is it different prompting?</h2>
+      <div class="qa-answer">
+        <p>It does not need to be 180 separately trained models. That would be hard to build, test and maintain. The same underlying model can serve every customer. What changes per customer is the rules they approve, their thresholds, and the instructions and reference material the model is given.</p>
+        <p>What has to be per customer is the evaluation. Each customer's results are tested on their own claims before anything is shown to their handlers.</p>
+      </div>
+    </article>
+
+  </main>
+</body>
+</html>

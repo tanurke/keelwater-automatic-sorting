@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Final submission | Keelwater automatic sorting</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="deck-body">
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="site-title">Keelwater: automatic sorting</p>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Starting Point</a></li>
+          <li><a href="ai-brainstorming.html">AI Brainstorming</a></li>
+          <li><a href="ai-challenged.html">Where I Challenged AI</a></li>
+          <li><a href="solution.html">Slides preparation using AI</a></li>
+          <li><a href="prototype.html">Prototype</a></li>
+          <li><a href="slides.html" aria-current="page">Final submission</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main class="deck" aria-live="polite">
+
+    <section class="deck-slide deck-title">
+      <p class="deck-kicker">Senior Product Manager task</p>
+      <h1>Keelwater: automatic sorting</h1>    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">1. The problem</p>
+      <h2>Customers are asking for automatic sorting. What are they really asking for?</h2>
+      <div class="deck-cols">
+        <div>
+          <h3>Who's asking</h3>
+          <ul>
+            <li>6 deals, £2.3M, one the biggest in pipeline</li>
+            <li>3 key accounts, one top-ten renewal in 5 months</li>
+            <li>Competitor launched it last quarter</li>
+          </ul>
+        </div>
+        <div>
+          <h3>What the data says</h3>
+          <ul>
+            <li>2.1M claims. For at least half, sorting happens within 11 minutes of arriving</li>
+            <li>15% take over 4 hours. We don't know why</li>
+            <li>3.4% change pile later. We don't know why</li>
+          </ul>
+        </div>
+      </div>
+      <div class="deck-cols deck-cols-4">
+        <div class="deck-card deck-next">
+          <h3>Handler time</h3>
+          <p>Routine claims off the handler's desk. Every claim is decided by hand today, including the obvious ones.</p>
+        </div>
+        <div class="deck-card deck-next">
+          <h3>Faster payment</h3>
+          <p>A routine claim waits in a queue until someone clicks. The claimant waits with it.</p>
+        </div>
+        <div class="deck-card deck-next">
+          <h3>Consistency</h3>
+          <p>The same claim gets the same answer. Today it depends on which handler picks it up.</p>
+        </div>
+        <div class="deck-card deck-next">
+          <h3>A reason</h3>
+          <p>Every decision explainable to the claimant and the regulator. Today the reason is in the handler's head.</p>
+        </div>
+      </div>
+      <p class="deck-point"><strong>The pain I can defend today:</strong> every claim is still sorted by a person, including the obvious ones, and the insurer cannot show a consistent, explainable reason. Deals, a renewal and a competitor are why it matters now. <strong>The pain I am betting on, if the checks hold:</strong> handlers are spending their capacity on claims a rule could decide, one by one, so other claims wait. The solution depends on this being true. If missing information or difficult decisions cause the delay, we take a different path.</p>
+      <p class="deck-confidence">Confidence: medium on the pain I can see today. The bet is unproven until the checks.</p>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">2. What I need to prove</p>
+      <h2>Assumptions, what I will check, and the outcome.</h2>
+      <table class="deck-table deck-table-checks">
+        <thead>
+          <tr><th>Assumption</th><th>How I check it</th><th>If it is not true</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>A useful number of claims follow repeatable decisions,</strong> using information available when they arrive.</td>
+            <td>Claims by type and pile. Review 200 claims sorted within 11 minutes. Can the reasons be written as rules? Do handlers agree?</td>
+            <td>Rules are not the first solution. Start with missing-information help or AI assistance.</td>
+          </tr>
+          <tr>
+            <td><strong>Handling these claims one by one consumes meaningful capacity.</strong></td>
+            <td>Active handling time by claim type and pile. Volume and time together.</td>
+            <td>Automation may still help consistency. It will not save meaningful handler time.</td>
+          </tr>
+          <tr>
+            <td><strong>The slow 15% is mainly waiting for a handler.</strong></td>
+            <td><strong>Waiting</strong> = first opened &minus; arrived. <strong>Working</strong> = sorted &minus; first opened. Check missing documents.</td>
+            <td>If the claim is hard, use AI assistance. If information is missing, collect it. Auto-sort does not help either.</td>
+          </tr>
+          <tr>
+            <td><strong>The reasons for the 3.4% re-sorts can be identified.</strong></td>
+            <td>Review 200 re-sorted claims. Wrong first decision, or new information? When did it arrive?</td>
+            <td>Wrong first decision: improve the rule or model. No clear pattern: do not automate re-sorting.</td>
+          </tr>
+          <tr>
+            <td><strong>Historical outcomes are reliable enough to test rules and AI.</strong></td>
+            <td>Compare the first pile, later re-sort, investigation and final outcome. Check how much outcome data is missing.</td>
+            <td>Capture reasons and outcomes first. The handler's first decision is not ground truth on its own.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">3. Who I talk to</p>
+      <h2>Further validation</h2>
+      <ul class="deck-list">
+        <li><strong>Who's asking?</strong> Nine customers: what lines they write, what their own data in Keelwater shows. Tests the key assumption.</li>
+        <li>40 tickets through AI: themes, who sent them</li>
+        <li>Six deal notes: what does "automatic" mean to each</li>
+        <li>Five customers: walk me through yesterday's sorting</li>
+        <li>One compliance lead: is sorting a regulated decision</li>
+        <li>Designer + handlers: observe real sorting, prototype recommendation/override flows, test whether automation removes work or simply creates checking work.</li>
+        <li>Engineering: what remains on bulk sorting, architecture constraints, and what can be reused.</li>
+        <li>Data team: why the prototype was put on hold (accuracy, explainability, customer trust, or priorities)</li>
+        <li>Competitor demo: what it automates end to end, at what error rate, with how much setup</li>
+      </ul>
+      <div class="deck-card deck-decision">
+        <h3>What happens after two weeks?</h3>
+        <ul>
+          <li>High routine volume + rules work &rarr; rules-first automation</li>
+          <li>Queue delay dominates &rarr; bulk first</li>
+          <li>Complexity dominates &rarr; AI assist, not auto-sort</li>
+          <li>Missing information dominates &rarr; request it, hold the claim, re-run the rules</li>
+          <li>Inconsistency dominates &rarr; rules/guidance/audit first</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">4. The solution</p>
+      <h2>Rules first. AI only where rules can't decide, with a person in the loop.</h2>
+      <table class="deck-table deck-table-metrics">
+        <thead>
+          <tr><th>Step</th><th>What happens</th><th>AI?</th><th>Earns the next step when</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Learn while handlers sort</strong></td>
+            <td>A handler filters "windscreen, under &pound;500, photo attached", selects all, and puts them in Simple. We record the filter, the pile and the reason.</td>
+            <td>Without AI</td>
+            <td>The same filter keeps coming up, from different handlers, and those claims stay in Simple.</td>
+          </tr>
+          <tr>
+            <td><strong>2. Apply rules</strong></td>
+            <td>"Under &pound;500, photo attached, no claim in 2 years, no risk flag: Simple." Written down, readable, approved by the customer. It suggests the pile.</td>
+            <td>Without AI</td>
+            <td>Run on last year's claims: covers enough to matter, few errors, and none wrongly put in Simple.</td>
+          </tr>
+          <tr>
+            <td><strong>3. No rule matches: find out why</strong></td>
+            <td>Is something missing? Is there a risk or vulnerability flag? Or is it complete, and just not covered by a rule?</td>
+            <td>Without AI</td>
+            <td>Each claim goes to the right next step.</td>
+          </tr>
+          <tr>
+            <td><strong>4A. Missing information</strong></td>
+            <td>No photo yet. Ask for it, hold the claim, and run the rules again when it arrives.</td>
+            <td>Without AI</td>
+            <td>Fewer chase-ups. The claim moves on without a handler opening it.</td>
+          </tr>
+          <tr>
+            <td><strong>4B. Read what the rules can't</strong></td>
+            <td>Facts in notes and documents, not in the claim fields. "The photo shows two cracks, the form says one."</td>
+            <td>With AI</td>
+            <td>Finds the right item. Points to the evidence. Never invents a fact.</td>
+          </tr>
+          <tr>
+            <td><strong>5. Suggest a pile</strong></td>
+            <td>Only complete claims no rule covers. "Closer look: repair quote is twice the usual for this car."</td>
+            <td>With AI</td>
+            <td>Beats the old model on what really happened to the claim, not on the handler's first sort.</td>
+          </tr>
+          <tr>
+            <td><strong>6. Handler decides</strong></td>
+            <td>One click to accept, one to change, for every rule and AI suggestion. A change needs a reason.</td>
+            <td>Without AI</td>
+            <td>Outcomes hold, and known-answer checks show handlers are really reviewing.</td>
+          </tr>
+          <tr>
+            <td><strong>7. Earn auto-sort</strong></td>
+            <td>The under-&pound;500 rule now sorts on its own, for one customer. Visible list, daily sample, kill switch.</td>
+            <td>Without AI for rules. With AI only for groups the model has earned</td>
+            <td>All five, for that customer:<br>1. Tested on history.<br>2. Tested with handlers.<br>3. Compliance has signed.<br>4. Can be switched off, and a daily sample is checked.<br>5. Worth it: time to pay or handler time moves.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="deck-point">Every decision is logged: pile, who or what decided, the reason, the rule or model version. Suspicious is always decided by a person.</p>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">5. Prioritise</p>
+      <h2>Now, next, not.</h2>
+      <div class="deck-cols deck-cols-3">
+        <div class="deck-card deck-now">
+          <h3>Now (6 weeks)</h3>
+          <ul>
+            <li>Finish bulk sorting. Record the filter, the pile and the reason. Repeated filters become candidate rules</li>
+            <li>Run the two-week checks alongside</li>
+            <li>Replay those rules, and the old model, on one customer's history</li>
+          </ul>
+          <p class="deck-exit"><strong>I stop if:</strong> it is more work than anticipated, and there is no clear value. If validation changes the priority, we change the plan without changing the commitment to the customer.</p>
+        </div>
+        <div class="deck-card deck-next">
+          <h3>Next (quarter)</h3>
+          <ul>
+            <li>Approved rules suggest a pile, for one pilot customer. They auto-sort only after they earn it</li>
+            <li>A person approves every suggestion at first. A change needs a reason</li>
+          </ul>
+          <p class="deck-exit"><strong>I stop if:</strong> rules cover too little to matter, or the customers asking are complex-lines insurers. Then missing-information help is the first slice.</p>
+        </div>
+        <div class="deck-card deck-not">
+          <h3>Not</h3>
+          <ul>
+            <li>Automatic Suspicious. A human decides, always</li>
+            <li>Anything that cannot give a plain-language reason</li>
+            <li>Building what the deals literally ask for before asking what they mean</li>
+          </ul>
+        </div>
+      </div>
+      <p class="deck-point">Before anything sorts on its own, per customer: what is the consequence of a wrong Simple? If it is primarily financial rather than customer harm, the risk threshold may be different. How much, on how many claims? That number, agreed with the customer, sets the accuracy bar and the date. Where the consequence is harm to a person, it stays a human decision.</p>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">6. How we'll know it worked</p>
+      <h2>Value metrics. Safety and quality guardrails.</h2>
+      <div class="deck-northstar">
+        <p class="deck-kicker">North Star</p>
+        <p class="deck-northstar-metric">Time from claim arriving to claimant paid, for all paid claims</p>
+        <p>Tracked overall, and separately by claim type and first pile. For claims that are not paid, track time to final resolution.</p>
+      </div>
+      <div class="deck-cols">
+        <div>
+          <h3>Value and operational outcomes</h3>
+          <ul>
+            <li><strong>Queue wait.</strong> Arrival to first meaningful action, at the median and the slow tail. This directly tests the bet.</li>
+            <li><strong>Handler minutes and cost per claim.</strong> Down, or we sell on speed and consistency instead.</li>
+            <li><strong>Correct automation coverage.</strong> % sorted without a handler that still agrees with the later re-sort, investigation or final outcome.</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Safety and quality guardrails</h3>
+          <ul>
+            <li><strong>Simple that should have been Suspicious.</strong> Found in the daily sample or at 30 days. Target: zero. One is a stop-and-review.</li>
+            <li><strong>Re-sort rate within 30 days.</strong> The 3.4%. If automation pushes it up, we are sorting wrong faster.</li>
+            <li><strong>Complaints about delay or wrongful investigation.</strong> Flat or down. This is what the regulator reads.</li>
+            <li><strong>Outcomes across claimant groups.</strong> Same claim type, same result, whoever the claimant. Vulnerable customers always go to a person.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="deck-point">Baseline for every number comes from Keelwater's own data before anything ships. The bar for each is set with the customer from their cost of a wrong decision.</p>
+      <div class="deck-card deck-decision">
+        <h3>What it's worth to a customer, in money</h3>
+        <p>Handler minutes saved per claim &times; claims per year &times; cost of a handler hour. Worked out per customer from their own baseline.</p>
+      </div>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">7. From signal to measurement</p>
+      <h2>Each step has a gate.</h2>
+      <table class="deck-table deck-table-4">
+        <thead>
+          <tr><th>Stage</th><th>What happens</th><th>Where AI changes the work</th><th>Gate to move on</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. Signal</strong><br>This week</td>
+            <td>6 deals, 3 key accounts, top-ten renewal, competitor launch, tickets. Sales told what not to promise.</td>
+            <td>Ticket and deal-note clustering</td>
+            <td>I know what "automatic" means to them</td>
+          </tr>
+          <tr>
+            <td><strong>2. Decision</strong><br>Weeks 1 to 2</td>
+            <td>Two-week data check, customer interviews. Problem statement, bulk sorting keep or stop, first slice.</td>
+            <td>Query drafting, claim-note reading. I check the logic</td>
+            <td>The decision box on slide 3 points one way</td>
+          </tr>
+          <tr>
+            <td><strong>3. Validation</strong><br>Quarter 1</td>
+            <td>Rules replayed on history, then live as suggestions. Judged on real claim outcomes. Known-answer checks.</td>
+            <td>Working prototype in days. The designer tests the suggestion with handlers before engineering builds.<br>Rule drafts from override reasons, for a person to approve</td>
+            <td>Safety and value tests on slides 4 and 6 pass</td>
+          </tr>
+          <tr>
+            <td><strong>4. Delivery</strong><br>Quarter 2</td>
+            <td>One pilot customer. Auto-sort Simple only. Kill switch, daily sample, audit log.</td>
+            <td>Suggestions only where rules can't decide. Suspicious stays human</td>
+            <td>Four clean weeks on the guardrails</td>
+          </tr>
+          <tr>
+            <td><strong>5. Measurement</strong><br>Ongoing</td>
+            <td>North Star and guardrails from slide 6, reviewed weekly. One customer at a time.</td>
+            <td>Drift flags. A person decides</td>
+            <td>Any breach switches auto-sort off</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">8. Sales and Customer Success</p>
+      <h2>Partner from customer signal to rollout.</h2>
+      <ul class="deck-list">
+        <li><strong>Understand the need together.</strong> Review deal notes, support tickets and customer data. Join customer calls to understand the problem behind the feature request.</li>
+        <li><strong>Agree the plan and commitments.</strong> Share what is known, what still needs validation, priorities, trade-offs and realistic dates. Keep one shared source of truth.</li>
+        <li><strong>Choose and support the pilot together.</strong> Customer Success helps select the right customer. Agree their needs, success measures, responsibilities and communication plan.</li>
+        <li><strong>Enable the teams.</strong> Provide demos, FAQs, competitor comparisons, training and release material based on evidence, not unproven claims.</li>
+        <li><strong>Close the feedback loop.</strong> Sales and Customer Success bring back objections, customer reactions and pilot feedback. Product explains what changes, what does not, and why.</li>
+      </ul>
+      <p class="deck-point"><strong>Outcome:</strong> Sales can sell confidently. Customer Success can support customers without surprises. The roadmap moves when the checks, the customers and the pilot make the case.</p>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">9. What I cut, and why</p>
+      <h2>These were left out due to time restriction.</h2>
+      <ul class="deck-list">
+        <li><strong>Rules configuration experience.</strong> Each customer may have its own sorting rules, so it may need a configurable screen. I have not designed who updates and approves the rules, what permissions and versioning are needed, or whether it belongs in an existing platform. That needs the designer and time with the customer.</li>
+        <li><strong>Detailed AI evaluation framework.</strong> The safety gates are already in the plan. I have not defined all the AI evals. That needs data, engineering and Compliance.</li>
+        <li><strong>More time on the prototype.</strong> Done with AI, with very high-level refinement from me.</li>
+      </ul>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">10. How I used AI</p>
+      <h2>Key points I challenged AI on.</h2>
+      <div class="deck-cols">
+        <div>
+          <h3>What AI did</h3>
+          <ul>
+            <li>Summarised the brief for me and checked whether I had missed anything</li>
+            <li>Brainstormed the problem and solution ideas, and helped prepare customer types and pain points in a scenario table</li>
+            <li>Supported market and regulation research</li>
+            <li>Helped me understand use cases through examples</li>
+            <li>Drew the workflow diagrams</li>
+            <li>Built the working prototype and this site</li>
+            <li>Kept my step 1 notes as a reusable Cursor skill file</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Where I overruled it</h3>
+          <p>A few examples.</p>
+          <ul>
+            <li><strong>Start with AI in shadow mode.</strong> AI suggested building and testing a model in shadow mode first. I chose to test the simpler rules hypothesis first, by replaying rules on last year's claims.</li>
+            <li><strong>Tag every claim before sorting.</strong> AI suggested tagging each claim first: line of business, surge, risk. I cut it. Without Keelwater's data model it would be a guess. One conversation with engineering.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="deck-slide">
+      <p class="deck-kicker">11. How the product lifecycle is changing</p>
+      <h2>What changes in the way I work.</h2>
+      <ul class="deck-list">
+        <li><strong>Weeks of work, now hours.</strong> Queries, ticket clustering and reading claim notes are hours. A working prototype is hours, not weeks. The two-week plan is only possible because of this.</li>
+        <li><strong>Prototype before spec.</strong> Early feedback from customers. Engineering uses the prototype as a reference to build from. Showing handlers a real screen beats describing one.</li>
+        <li><strong>Easier to understand the system.</strong> I can read the code, and draft the documentation, architecture diagrams and tickets. Engineering checks them.</li>
+        <li><strong>Shipping starts continuous evaluation.</strong> Rules, models and fraud can drift, so measuring, sample checks and the kill switch are built into the product.</li>
+        <li><strong>The PM's job moves to judgement.</strong> Which question to ask, the decisions behind the architecture, the customer relationship, the bar for "safe", and what we don't promise. Checking every AI output is now a core skill.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <div class="deck-controls">
+    <button type="button" class="deck-btn" id="prev" aria-label="Previous slide">&#8592;</button>
+    <span class="deck-counter" id="counter">1 / 12</span>
+    <button type="button" class="deck-btn" id="next" aria-label="Next slide">&#8594;</button>
+  </div>
+
+  <script>
+    (function () {
+      var slides = Array.prototype.slice.call(document.querySelectorAll(".deck-slide"));
+      var counter = document.getElementById("counter");
+      var prev = document.getElementById("prev");
+      var next = document.getElementById("next");
+      var index = 0;
+
+      function fromHash() {
+        var n = parseInt(window.location.hash.replace("#", ""), 10);
+        return isNaN(n) ? 0 : Math.min(Math.max(n - 1, 0), slides.length - 1);
+      }
+
+      function show(i) {
+        index = Math.min(Math.max(i, 0), slides.length - 1);
+        slides.forEach(function (s, k) { s.classList.toggle("is-active", k === index); });
+        counter.textContent = (index + 1) + " / " + slides.length;
+        prev.disabled = index === 0;
+        next.disabled = index === slides.length - 1;
+        history.replaceState(null, "", "#" + (index + 1));
+      }
+
+      prev.addEventListener("click", function () { show(index - 1); });
+      next.addEventListener("click", function () { show(index + 1); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") { e.preventDefault(); show(index + 1); }
+        if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); show(index - 1); }
+      });
+      window.addEventListener("hashchange", function () { show(fromHash()); });
+
+      show(fromHash());
+    })();
+  </script>
+</body>
+</html>

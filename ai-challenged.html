@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Where I Challenged AI | Keelwater automatic sorting</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="site-title">Keelwater: automatic sorting</p>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Starting Point</a></li>
+          <li><a href="ai-brainstorming.html">AI Brainstorming</a></li>
+          <li><a href="ai-challenged.html" aria-current="page">Where I Challenged AI</a></li>
+          <li><a href="solution.html">Slides preparation using AI</a></li>
+          <li><a href="prototype.html">Prototype</a></li>
+          <li><a href="slides.html">Final submission</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Where I Challenged AI</h1>
+
+    <article class="qa">
+      <h2 class="qa-question">1. Start by building a model and running it in shadow mode?</h2>
+      <div class="qa-answer">
+        <p><strong>What AI suggested:</strong> build and test a model in shadow mode first. It would make hidden predictions on live claims, which we could compare with handler decisions before showing anything to users.</p>
+        <p><strong>Why I challenged it:</strong> that assumes a model is the first solution. Much of the sorting logic may be policy that can be expressed as a readable rule. A deterministic rule does not need weeks in shadow mode to reveal how it behaves. Keelwater already has a year of claims on which we can replay it.</p>
+        <p><strong>What I decided:</strong> test the simpler rules hypothesis first. Draft candidate rules from past claims, have the customer approve them, and replay them on last year's claims. Measure coverage, error rate and harmful errors. A person approves every live suggestion at first. Auto-sort is considered only after those numbers pass.</p>
+        <p><strong>What changed in the final plan:</strong> the next six weeks remain focused on finishing bulk sorting, which is already half built. Rules replay runs alongside it as a separate validation activity. AI is considered later, only for complete claims that no approved rule can decide. Suspicious is always decided by a person.</p>
+      </div>
+    </article>
+
+    <article class="qa">
+      <h2 class="qa-question">2. Tag every claim before sorting?</h2>
+      <div class="qa-answer">
+        <p><strong>What AI suggested:</strong> add an enrichment step that tags every claim by line of business, surge event and risk before it reaches the sorting logic.</p>
+        <p><strong>Why I challenged it:</strong> the idea jumped into architecture without knowing Keelwater's data model. Some of those facts may already exist as structured claim or policy fields. Some may be customer configuration. Others may need detection. Designing a new tagging layer now would be a guess and could duplicate existing platform capability.</p>
+        <p><strong>What I decided:</strong> do not make tagging a committed part of the solution. In week one, ask Engineering what information is already present when a claim arrives and what can be reused. Then add only the smallest missing capability required by the chosen first slice.</p>
+        <p><strong>A related distinction:</strong> checks before a Simple rule—such as an existing risk flag or the same phone number on other open claims—are data checks, not AI. Claims bunching just under £500 is a regular pattern to monitor across claims, not a check that can be made on one claim.</p>
+      </div>
+    </article>
+  </main>
+</body>
+</html>

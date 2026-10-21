@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Slides preparation using AI | Keelwater automatic sorting</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <p class="site-title">Keelwater: automatic sorting</p>
+      <nav class="site-nav" aria-label="Main">
+        <ul>
+          <li><a href="index.html">Starting Point</a></li>
+          <li><a href="ai-brainstorming.html">AI Brainstorming</a></li>
+          <li><a href="ai-challenged.html">Where I Challenged AI</a></li>
+          <li><a href="solution.html" aria-current="page">Slides preparation using AI</a></li>
+          <li><a href="prototype.html">Prototype</a></li>
+          <li><a href="slides.html">Final submission</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Slides preparation using AI</h1>
+
+    <section class="step slide" aria-labelledby="slide-1-title">
+      <span class="step-label">Slide 1</span>
+      <h2 id="slide-1-title">What I read, what I understood, and the problem I think we are solving</h2>
+
+      <div class="note-group">
+        <h3>1. What the brief told me</h3>
+        <ul>
+          <li>Customers are asking for "automatic sorting". Six deals worth £2.3M, three key accounts, one top-ten renewal in five months, 40 tickets, and a competitor who launched it last quarter.</li>
+          <li>2.1M claims a year. Median 11 minutes from arrival to sorted. 15% take over four hours. 3.4% change pile within 30 days.</li>
+          <li>Every decision about a claim must be explainable to the claimant and the regulator.</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>2. What I understood from it</h3>
+        <ul>
+          <li>Sorting is mostly fast, with a long tail. The headline problem is not speed.</li>
+          <li>Most claims are decided quickly, which suggests most are routine. The slow 15% and the re-sorted 3.4% are where the pain and the risk sit, and we do not yet know why they happen.</li>
+          <li>"Automatic sorting" is the customer's word for the solution. The underlying asks are fewer handler minutes on routine claims, the same answer every time, and a reason they can show a regulator.</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>3. What I am assuming, because the brief does not say. Each one would change the problem if wrong</h3>
+        <ul>
+          <li><strong>The customers asking are mostly high-volume insurers</strong> (motor, home, travel) with many routine claims.</li>
+          <li><strong>Routine claims take a meaningful share of handler time,</strong> not just a large share of claim count.</li>
+          <li><strong>Different handlers at the same insurer sort similar claims differently,</strong> because the logic lives in their heads.</li>
+          <li><strong>Sorting counts as a "decision about a claim" that must be explained to the regulator.</strong> If not, the explainability constraint loosens and the solution gets simpler.</li>
+          <li><strong>Each insurer has its own sorting criteria.</strong> Same three piles, different logic for what goes in them. If one set of rules fits everyone, per-customer configuration is unnecessary.</li>
+          <li><strong>The competitor shipped automation without explainability.</strong> If they shipped both, our differentiation is weaker.</li>
+          <li><strong>Bulk sorting answers a real need and is on track.</strong> Six weeks of the squad rest on it.</li>
+        </ul>
+        <p class="step-summary">How I test each of these, and how fast, is Slide 2.</p>
+      </div>
+
+      <div class="note-group">
+        <h3>4. What I do not know, and will find out first</h3>
+        <ul>
+          <li>Why the 15% are slow: queue wait, missing information, or genuine complexity. Each needs a different fix.</li>
+          <li>Why the 3.4% move: a wrong first sort, or new information arriving later. One is a sorting problem, the other a timing problem.</li>
+          <li>What "automatic" means to each of the six deals. Nobody has asked.</li>
+          <li>Whether the 11-minute median holds for the customers who are asking.</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>5. So the problem I think we are solving</h3>
+        <ul>
+          <li><strong>Handlers make thousands of routine decisions that need no judgement, and the decisions that do need judgement are not consistent or explainable at scale. Customers are asking for automation. What they need is routine claims taken off the handler's desk, the same answer every time, and a reason for every decision.</strong></li>
+          <li><strong>Confidence: medium-high</strong> that this is the problem. <strong>Medium</strong> that auto-sorting routine claims is the right first step. <strong>Low</strong> that it fixes the 15% or the 3.4%, because we do not know what they are yet.</li>
+          <li><strong>What would change my mind:</strong> if the customers asking turn out to handle mostly complex or fraud-heavy claims, the first thing to build is helping handlers get missing information faster, or explainable fraud flags, not auto-sorting routine claims.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="step slide" aria-labelledby="slide-2-title">
+      <span class="step-label">Slide 2</span>
+      <h2 id="slide-2-title">Validation: what I check before committing the squad, and how fast</h2>
+      <p class="step-summary">The piles, the timestamps and the handler actions all live in Keelwater. Most of this is queries on our own data, not customer research. Two weeks, mostly data team time, with AI writing the queries and reading the free text.</p>
+
+      <div class="note-group">
+        <h3>1. In Keelwater's data (week 1)</h3>
+        <ul>
+          <li><strong>How many claims end up in each pile?</strong> Count by pile, by customer, by line of business, over 12 months. <em>If most of the 2.1M are Simple, the first slice is confirmed. If Simple is a minority, the problem is elsewhere.</em></li>
+          <li><strong>Where do the four hours go?</strong> Four timestamps per claim: arrived, first opened, sorted, re-sorted. Arrived to first opened is queue wait. First opened to sorted is handling time. <em>If the 15% is mostly queue wait, it is capacity, and taking routine claims off the desk helps. If it is mostly handling time, it is complexity or missing information, and sorting automation does not help.</em></li>
+          <li><strong>How long does a Simple claim take versus the others?</strong> Handling time by final pile. <em>If Simple claims take two minutes and the rest take an hour, routine claims are a small share of handler time, and assumption 2 on Slide 1 is wrong.</em></li>
+          <li><strong>Why do the 3.4% move?</strong> Sample 200 re-sorted claims. Check what was added to the claim between the first and second sort: documents, notes, answers. <em>If something arrived, it is a timing problem. If nothing changed, the first sort was wrong.</em> AI reads the notes and classifies them.</li>
+          <li><strong>Do handlers at the same insurer agree?</strong> Similar claims (same line, amount band, cause) at the same customer, sorted by different handlers. How often do they land in different piles? <em>Tests assumption 3. If agreement is already high, consistency is not the problem.</em></li>
+          <li><strong>Are the customers asking different from the rest?</strong> Rerun all of the above for the six deals' comparable customers and the three accounts. <em>Tests whether 11 minutes and the 15% hold for the people who are asking.</em></li>
+          <li><strong>Rules replay.</strong> Write ten Simple rules for one high-volume customer. Run them over that customer's last year. <em>Two numbers: share of claims the rules decide, and how often they disagree with the pile after 30 days. This decides whether a model is needed at all.</em></li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>2. With people (weeks 1 to 2)</h3>
+        <ul>
+          <li><strong>The 40 support tickets.</strong> Paste into AI, cluster by theme, read the clusters. Who sent them, and what did they actually ask for? Two hours.</li>
+          <li><strong>The six deal notes and three account reviews.</strong> What does each one mean by "automatic"? What kind of insurer are they? Two days with Sales and CS.</li>
+          <li><strong>Five customer calls.</strong> Walk me through yesterday's sorting. Who decides what goes in each pile, and is it written down anywhere? What would you need to see to trust a suggestion? Not "would you like automation". One week.</li>
+          <li><strong>One compliance person.</strong> Does sorting count as a decision you must explain to the regulator? What would you need to see in the record? One call.</li>
+          <li><strong>Tech lead and designer.</strong> What is left on bulk sorting, who asked for it, and does Keelwater hold claim content or only fields? One day.</li>
+          <li><strong>The competitor.</strong> Their demo, their sales deck, a customer who has seen it. Does it explain its decisions? One week.</li>
+        </ul>
+      </div>
+
+      <div class="note-group">
+        <h3>3. What each result does to the plan</h3>
+        <ul>
+          <li><strong>Simple is the majority and the 15% is mostly queue wait:</strong> auto-sort Simple is the first slice. Proceed.</li>
+          <li><strong>Simple is the majority but handling time is small:</strong> the value is consistency and explainability, not handler minutes. Lead with rules and the audit log, not automation.</li>
+          <li><strong>The 15% is mostly handling time with missing information:</strong> the first slice becomes missing-information flags and document reading. Sorting automation waits.</li>
+          <li><strong>Rules cover more than half of Simple at low error:</strong> ship rules first, no model. <strong>Rules cover little:</strong> AI is needed now.</li>
+          <li><strong>The askers are complex-lines or fraud-heavy insurers:</strong> Slide 1 problem statement changes. Back to the panel with a different first step.</li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+</body>
+</html>
